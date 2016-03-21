@@ -1,0 +1,3 @@
+# gCore
+An lightweight high performance deep learning library for deep learning based on CUDA. 
+Not dependent any third party librarys(e.g cublas, cufft). This program is still under developing...
