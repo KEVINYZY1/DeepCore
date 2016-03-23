@@ -1,4 +1,4 @@
-﻿#ifndef __dnnCore_h__
+#ifndef __dnnCore_h__
 #define __dnnCore_h__
 
 #if defined(_MSC_VER)&&(defined(_WIN32)||defined(_WIN64))
@@ -34,7 +34,7 @@
 
 #define dnnTensorTypeMaskGeneral		0x0
 #define dnnTensorTypeMaskFilter			0x4
-#define dnnTensorTypeMaskFullConnection	0xc
+#define dnnTensorTypeMaskFullConnection		0xc
 
 #define dnnPoolingMaskAvg			0x0
 #define dnnPoolingMaskMax			0x4
