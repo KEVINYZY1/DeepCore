@@ -25,7 +25,6 @@
 	#endif
 #endif
 
-#include<stdlib.h>
 #include<cuda.h>
 
 #define dnnPrecisionMaskFloat			0x0
