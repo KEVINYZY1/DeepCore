@@ -88,7 +88,7 @@ __APIENTRY__	void			__APICALL__ dnnConv( dnnConvOp, void*, const void*, const vo
 __APIENTRY__	void			__APICALL__ dnnFFTConv( dnnFFTConvOp, void*, void*, const void*, const void*, float, CUstream );
 __APIENTRY__	void			__APICALL__ dnnPooling( dnnPoolingOp, void*, const void*, int, CUstream );
 __APIENTRY__	void			__APICALL__ dnnBiasUpdate( dnnBiasOp, void*, const void*, float, CUstream );
-__APIENTRY__	void			__APICALL__ dnnActivate( dnnActivationOp, void*, const void*, const void*, uint64, float, float, int, CUstream );
+__APIENTRY__	void			__APICALL__ dnnActivate( dnnActivationOp, void*, void*, const void*, uint64, float, float, int, CUstream );
 __APIENTRY__	void			__APICALL__ dnnReduce( dnnReductionOp, void*, const void*, CUstream );
 
 __APIENTRY__	void			__APICALL__ dnnDestroyConvOp( dnnConvOp );
