@@ -33,10 +33,10 @@
 
 #define dnnTensorTypeMaskFilter		0x4
 #define dnnTensorTypeMaskBias		0x5
-#define dnnTensorTypeMaskFC			0x6
+#define dnnTensorTypeMaskFC		0x6
 
-#define dnnPoolingMaskAvg			0x0
-#define dnnPoolingMaskMax			0x4
+#define dnnPoolingMaskAvg		0x0
+#define dnnPoolingMaskMax		0x4
 
 #define	dnnActivationMaskReLU		0x0
 #define	dnnActivationMaskPReLU		0x4
@@ -44,36 +44,36 @@
 #define	dnnActivationMaskTanh		0x6
 #define	dnnActivationMaskSigmod		0x7
 
-#define dnnReductionMaskAdd			0x0
-#define dnnReductionMaskMax			0x4
-#define dnnReductionMaskMin			0x5
+#define dnnReductionMaskAdd		0x0
+#define dnnReductionMaskMax		0x4
+#define dnnReductionMaskMin		0x5
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-typedef struct __dnnConvOp		*	dnnConvOp;
+typedef struct __dnnConvOp	*	dnnConvOp;
 typedef struct __dnnFFTConvOp	*	dnnFFTConvOp;
 typedef struct __dnnCellConvOp	*	dnnCellConvOp;
 typedef struct __dnnPoolingOp	*	dnnPoolingOp;
-typedef struct __dnnBiasOp		*	dnnBiasOp;
+typedef struct __dnnBiasOp	*	dnnBiasOp;
 typedef struct __dnnReductionOp	*	dnnReductionOp;
 typedef struct __dnnActivationOp*	dnnActivationOp;
 
 typedef enum dnnStatus{
-	dnnSuccess=0			,
+	dnnSuccess=0		,
 	dnnErrorInvalidValue	,
 	dnnErrorInvalidDevice	,
 	dnnErrorOutOfMaxSize	,
-	dnnErrorOutOfMemory		,
+	dnnErrorOutOfMemory	,
 	dnnErrorOutOfDeviceMemory
 } dnnStatus_t;
 
 __APIENTRY__	dnnStatus_t		__APICALL__ dnnInit();
-__APIENTRY__	int				__APICALL__ dnnSuperdeviceCount();
-__APIENTRY__	int				__APICALL__ dnnSuperdeviceSize( int );
-__APIENTRY__	int				__APICALL__ dnnOptimalSuperdeviceID();
+__APIENTRY__	int			__APICALL__ dnnSuperdeviceCount();
+__APIENTRY__	int			__APICALL__ dnnSuperdeviceSize( int );
+__APIENTRY__	int			__APICALL__ dnnOptimalSuperdeviceID();
 __APIENTRY__	void			__APICALL__ dnnSetDevice( int, int );
 
 __APIENTRY__	uint64			__APICALL__ dnnCreateTensorShape( unsigned int, unsigned int, unsigned int, unsigned int, unsigned int );
