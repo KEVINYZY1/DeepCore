@@ -21,12 +21,12 @@
 #include<cuda.h>
 
 <<<<<<< HEAD
-#define dnnPrecisionMaskFloat				0x0
-#define dnnPrecisionMaskMixed				0x1
-#define dnnPrecisionMaskHalf				0x2
+#define dnnPrecisionMaskFloat			0x0
+#define dnnPrecisionMaskMixed			0x1
+#define dnnPrecisionMaskHalf			0x2
 
-#define dnnTensorTypeMaskFilter				0x4
-#define dnnTensorTypeMaskBias				0x5
+#define dnnTensorTypeMaskFilter			0x4
+#define dnnTensorTypeMaskBias			0x5
 #define dnnTensorTypeMaskFullConnection		0x6
 =======
 #define dnnPrecisionMaskFloat		0x0
@@ -41,13 +41,13 @@
 #define dnnPoolingMaskMax		0x4
 >>>>>>> origin/master
 
-#define dnnPoolingMaskAvg					0x0
-#define dnnPoolingMaskMax					0x4
+#define dnnPoolingMaskAvg		0x0
+#define dnnPoolingMaskMax		0x4
 
 <<<<<<< HEAD
-#define	dnnActivationMaskReLU				0x0
-#define	dnnActivationMaskTanh				0x6
-#define	dnnActivationMaskSigmod				0x7
+#define	dnnActivationMaskReLU		0x0
+#define	dnnActivationMaskTanh		0x6
+#define	dnnActivationMaskSigmod		0x7
 =======
 #define dnnReductionMaskAdd		0x0
 #define dnnReductionMaskMax		0x4
@@ -60,20 +60,19 @@ extern "C"
 #endif
 
 <<<<<<< HEAD
-typedef struct __dnnConvOp			*	dnnConvOp;
+typedef struct __dnnConvOp		*	dnnConvOp;
 typedef struct __dnnFFTConvOp		*	dnnFFTConvOp;
 typedef struct __dnnCellConvOp		*	dnnCellConvOp;
 typedef struct __dnnPoolingOp		*	dnnPoolingOp;
-typedef struct __dnnBiasOp			*	dnnBiasOp;
+typedef struct __dnnBiasOp		*	dnnBiasOp;
 typedef struct __dnnActivationOp	*	dnnActivationOp;
-typedef struct __dnnFilterOp		*	dnnFilterOp;
 
 typedef enum dnnStatus{
-	dnnSuccess=0				,
+	dnnSuccess=0			,
 	dnnErrorInvalidValue		,
 	dnnErrorInvalidDevice		,
 	dnnErrorOutOfMaxSize		,
-	dnnErrorOutOfMemory			,
+	dnnErrorOutOfMemory		,
 	dnnErrorOutOfDeviceMemory	
 } dnnStatus_t;
 
