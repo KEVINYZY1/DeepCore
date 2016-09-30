@@ -6,7 +6,7 @@
 
 typedef struct convOp{
 	cuda_kernel_t	kernel;
-	CUdeviceptr		d_slider;
+	CUdeviceptr	d_slider;
 } convOp_t;
 
 int	 conv_createOp( convOp_t*, unsigned int*, const cuda_context_t*, int, int, int, int, int, int, int );
