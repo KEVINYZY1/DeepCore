@@ -114,28 +114,28 @@ static const fft_kernel_prop_t cellfftkp_c2r[]=
 	{{ "d_sfft32x32_c2r_filter"		, "d_xfft32x32_c2r_filter"		, "d_hfft32x32_c2r_filter"		}, AM_3P_5S }
 };
 
-void create_fft_kernel_r2c( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, unsigned int i, unsigned int prc )
+void create_fft_kernel_r2c( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, int i, int prc )
 {
 	cuda_context_create_kernel( p_kernel, p_ctx, fftkp_r2c[i].names[prc] );
 	cuda_kernel_sao( p_kernel, fftkp_r2c[i].argmask );
 	cuda_kernel_sbl( p_kernel, i<4?32:64, 8 );
 	cuda_kernel_sep_ptr( p_kernel, 2, p_ctx->d_global+g_fftRF_ofs[i<4?2:3]*sizeof(float2) );
 }
-void create_fft_kernel_c2r( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, unsigned int i, unsigned int prc )
+void create_fft_kernel_c2r( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, int i, int prc )
 {
 	cuda_context_create_kernel( p_kernel, p_ctx, fftkp_c2r[i].names[prc] );
 	cuda_kernel_sao( p_kernel, fftkp_c2r[i].argmask );
 	cuda_kernel_sbl( p_kernel, i<10?32:64, 8 );
 	cuda_kernel_sep_ptr( p_kernel, 2, p_ctx->d_global+g_fftRF_ofs[i<16?2:3]*sizeof(float2) );
 }
-void create_cellfft_kernel_r2c( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, unsigned int i, unsigned int prc )
+void create_cellfft_kernel_r2c( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, int i, int prc )
 {
 	cuda_context_create_kernel( p_kernel, p_ctx, cellfftkp_r2c[i].names[prc] );
 	cuda_kernel_sao( p_kernel, cellfftkp_r2c[i].argmask );
 	cuda_kernel_sbl( p_kernel, i>7?512:256, 1 );
 	cuda_kernel_sep_ptr( p_kernel, 2, p_ctx->d_global+g_fftRF_ofs[i>7]*sizeof(float2) );
 }
-void create_cellfft_kernel_c2r( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, unsigned int i, unsigned int prc )
+void create_cellfft_kernel_c2r( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, int i, int prc )
 {
 	cuda_context_create_kernel( p_kernel, p_ctx, cellfftkp_c2r[i].names[prc] );
 	cuda_kernel_sao( p_kernel, cellfftkp_c2r[i].argmask );
