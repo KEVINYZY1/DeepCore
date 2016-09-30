@@ -35,9 +35,9 @@ size_t cellconv_createOp( cellconvOp_t* Op, const cuda_context_t* p_ctx, unsigne
 		if(bat>1)
 		{				
 			cuda_kernel_sep_i32( p_kernel, 3, dir?inc:bat	);
-			cuda_kernel_sep_i32( p_kernel, 4, ds			);
-			cuda_kernel_sep_i32( p_kernel, 5, ds			);
-			cuda_kernel_sep_i32( p_kernel, 6, lda			);
+			cuda_kernel_sep_i32( p_kernel, 4, ds		);
+			cuda_kernel_sep_i32( p_kernel, 5, ds		);
+			cuda_kernel_sep_i32( p_kernel, 6, lda		);
 			if((ds<=32)&(pad==0)){
 				cuda_kernel_sep_i32( p_kernel, 7, dir?qds:lds );
 				cuda_kernel_sep_i32( p_kernel, 8, dir?lds:qds );
@@ -67,10 +67,10 @@ size_t cellconv_createOp( cellconvOp_t* Op, const cuda_context_t* p_ctx, unsigne
 		p_kernel=&Op->kfft[1];
 		create_cellfft_kernel_r2c( p_kernel, p_ctx, (cell_size>16?8:0)+(dir==0?1:3), prc );
 		cuda_kernel_sgl( p_kernel, (onc+15)>>4, inc );
-		cuda_kernel_sep_i32( p_kernel, 3, onc			);
-		cuda_kernel_sep_i32( p_kernel, 4, fs			);
-		cuda_kernel_sep_i32( p_kernel, 5, fs			);
-		cuda_kernel_sep_i32( p_kernel, 6, ldb			);
+		cuda_kernel_sep_i32( p_kernel, 3, onc		);
+		cuda_kernel_sep_i32( p_kernel, 4, fs		);
+		cuda_kernel_sep_i32( p_kernel, 5, fs		);
+		cuda_kernel_sep_i32( p_kernel, 6, ldb		);
 		cuda_kernel_sep_i32( p_kernel, 7, dir?qfs:lds	);
 		cuda_kernel_sep_i32( p_kernel, 8, dir?lds:qfs	);
 	}
@@ -85,9 +85,9 @@ size_t cellconv_createOp( cellconvOp_t* Op, const cuda_context_t* p_ctx, unsigne
 		p_kernel=&Op->kfft[2];
 		create_cellfft_kernel_c2r( p_kernel, p_ctx, i, prc );
 		cuda_kernel_sgl( p_kernel, (naxis+radix-1)/radix, n_cells>1?onc:1 );
-		cuda_kernel_sep_i32( p_kernel, o+0, naxis					);
-		cuda_kernel_sep_i32( p_kernel, o+1, os						);
-		cuda_kernel_sep_i32( p_kernel, o+2, os						);
+		cuda_kernel_sep_i32( p_kernel, o+0, naxis			);
+		cuda_kernel_sep_i32( p_kernel, o+1, os				);
+		cuda_kernel_sep_i32( p_kernel, o+2, os				);
 		cuda_kernel_sep_i32( p_kernel, o+3, AFFIS(bat*os*os,align)	);
 		cuda_kernel_sep_i32( p_kernel, o+4, n_cells>1?lda:ldb		);
 		if(grid>1){
@@ -128,10 +128,10 @@ size_t cellconv_createOp_filter( cellconvOp_t* Op, const cuda_context_t* p_ctx, 
 		p_kernel=&Op->kfft[0];
 		create_cellfft_kernel_r2c( p_kernel, p_ctx, i+(pn!=cell_size), prc );
 		cuda_kernel_sgl( p_kernel, (pnc+15)>>4, bat );
-		cuda_kernel_sep_i32( p_kernel, 3, pnc					);
-		cuda_kernel_sep_i32( p_kernel, 4, pn					);
-		cuda_kernel_sep_i32( p_kernel, 5, pn					);
-		cuda_kernel_sep_i32( p_kernel, 6, lda					);
+		cuda_kernel_sep_i32( p_kernel, 3, pnc	);
+		cuda_kernel_sep_i32( p_kernel, 4, pn	);
+		cuda_kernel_sep_i32( p_kernel, 5, pn	);
+		cuda_kernel_sep_i32( p_kernel, 6, lda	);
 		cuda_kernel_sep_i32( p_kernel, 7, AFFIS(bat*qpn,align)	);
 		if(bat>1){
 			cuda_kernel_sep_i32( p_kernel, 8, qpn	);
@@ -143,10 +143,10 @@ size_t cellconv_createOp_filter( cellconvOp_t* Op, const cuda_context_t* p_ctx, 
 		p_kernel=&Op->kfft[1];
 		create_cellfft_kernel_r2c( p_kernel, p_ctx, i+3, prc );
 		cuda_kernel_sgl( p_kernel, (qnc+15)>>4, bat	);
-		cuda_kernel_sep_i32( p_kernel, 3, qnc					);
-		cuda_kernel_sep_i32( p_kernel, 4, qn					);
-		cuda_kernel_sep_i32( p_kernel, 5, qn					);
-		cuda_kernel_sep_i32( p_kernel, 6, ldb					);
+		cuda_kernel_sep_i32( p_kernel, 3, qnc	);
+		cuda_kernel_sep_i32( p_kernel, 4, qn	);
+		cuda_kernel_sep_i32( p_kernel, 5, qn	);
+		cuda_kernel_sep_i32( p_kernel, 6, ldb	);
 		cuda_kernel_sep_i32( p_kernel, 7, AFFIS(bat*qqn,align)	);
 		if(bat>1){
 			cuda_kernel_sep_i32( p_kernel, 8, qqn );
@@ -159,11 +159,11 @@ size_t cellconv_createOp_filter( cellconvOp_t* Op, const cuda_context_t* p_ctx, 
 		p_kernel=&Op->kfft[2];
 		create_cellfft_kernel_c2r( p_kernel, p_ctx, cell_size<=16?18:46, prc );
 		cuda_kernel_sgl( p_kernel, (pnc+radix-1)/radix, qnc );
-		cuda_kernel_sep_i32( p_kernel, 3, pnc				  );
-		cuda_kernel_sep_i32( p_kernel, 4, d					  );
-		cuda_kernel_sep_i32( p_kernel, 5, d					  );
+		cuda_kernel_sep_i32( p_kernel, 3, pnc	);
+		cuda_kernel_sep_i32( p_kernel, 4, d	);
+		cuda_kernel_sep_i32( p_kernel, 5, d	);
 		cuda_kernel_sep_i32( p_kernel, 6, AFFIS(pnc*d*d,align));
-		cuda_kernel_sep_i32( p_kernel, 7, lda				  );
+		cuda_kernel_sep_i32( p_kernel, 7, lda	);
 	}
 
 	n=((cell_size>>1)+1)*cell_size;
