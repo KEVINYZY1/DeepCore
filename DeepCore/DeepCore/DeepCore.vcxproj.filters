@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="device">
+      <UniqueIdentifier>{25aff45a-468b-482f-8e19-89d36ec070ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\fft">
+      <UniqueIdentifier>{5e0decc8-3b50-4a63-b918-ddbe3f37946e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\fft">
+      <UniqueIdentifier>{b10e677f-e012-46db-bf94-d0b21cbcfa7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\blas">
+      <UniqueIdentifier>{095d601f-8339-4631-89b0-9e4ea02d792f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\blas">
+      <UniqueIdentifier>{a758caad-b0d6-4e07-b950-7b38174c78ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\cuda">
+      <UniqueIdentifier>{608c0db1-218a-4b5d-9cb5-d0bdadcddac1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\cuda">
+      <UniqueIdentifier>{5e3406da-3124-43b3-9602-535cbf9d4902}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\activation">
+      <UniqueIdentifier>{b0102d7e-f97b-4abb-9af5-0f27d3a5f800}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\pooling">
+      <UniqueIdentifier>{f2747701-ae35-46b0-b0ff-8ad78b5e1dd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\conv">
+      <UniqueIdentifier>{66ae3204-ce6a-4e98-a598-23fa0a30790a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\conv">
+      <UniqueIdentifier>{32bcc90a-cf13-4ac4-bf30-91eadf76a99f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\pooling">
+      <UniqueIdentifier>{caaa7b52-a730-4349-9929-6f5d317cde2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\activation">
+      <UniqueIdentifier>{357ddc9a-8208-48ea-a06e-40a592a194ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bias">
+      <UniqueIdentifier>{31d8ea88-b90d-4e59-a934-3d0f74cbaf9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\bias">
+      <UniqueIdentifier>{9e60763e-1db6-426d-a659-ad92ba441c09}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\dev\kbin64_sm35.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dev\kbin64_sm37.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dev\kbin64_sm50.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dev\kbin64_sm52.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fft\fft_bop.h">
+      <Filter>include\fft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fft\fft_calcRF.h">
+      <Filter>include\fft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fft\fft.h">
+      <Filter>include\fft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\blas\perm.h">
+      <Filter>include\blas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\cuda\cuda_ctx.h">
+      <Filter>include\cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\cuda\cuda_kernel.h">
+      <Filter>include\cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\cuda\cuda_platform.h">
+      <Filter>include\cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\blas\cgemm.h">
+      <Filter>include\blas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\blas\gemv.h">
+      <Filter>include\blas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dev\kbin64_sm53.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dev\kbin64_sm60.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dev\kbin64_sm61.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\DeepCore.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dev\kbin64_sm62.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dc_argmask.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dc_macro.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dc_status.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\conv\cellconv.h">
+      <Filter>include\conv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\conv\conv.h">
+      <Filter>include\conv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\conv\fftconv.h">
+      <Filter>include\conv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\bias\bias.h">
+      <Filter>include\bias</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\activation\activation.h">
+      <Filter>include\activation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\pooling\pooling.h">
+      <Filter>include\pooling</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\fft\fft_calcRF.c">
+      <Filter>source\fft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\fft\fft.c">
+      <Filter>source\fft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\blas\perm.c">
+      <Filter>source\blas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cuda\cuda_ctx.c">
+      <Filter>source\cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cuda\cuda_platform.c">
+      <Filter>source\cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\blas\cgemm.c">
+      <Filter>source\blas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\blas\gemv.c">
+      <Filter>source\blas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\DeepCore.c">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\pooling\pooling.c">
+      <Filter>source\pooling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\conv\cellconv.c">
+      <Filter>source\conv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\conv\conv.c">
+      <Filter>source\conv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\conv\fftconv.c">
+      <Filter>source\conv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\activation\activation.c">
+      <Filter>source\activation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\bias\bias.c">
+      <Filter>source\bias</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
