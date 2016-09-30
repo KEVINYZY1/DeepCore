@@ -10,15 +10,15 @@
 #define AM(i,n) ((n)<<((i)<<1))
 
 typedef struct cuda_kernel{
-	CUfunction		id;	
+	CUfunction	id;	
 	unsigned int	gdx;
 	unsigned int	gdy;
-	ushort2			block;
+	ushort2		block;
 	unsigned int	smemnb;
 	unsigned int	arg_size;
-	void*			extra[5];
+	void*		extra[5];
 	unsigned char	arg_ofs[16];
-	char			args[128];
+	char		args[128];
 } cuda_kernel_t;
 
 __forceinline void cuda_kernel_sao( cuda_kernel_t* p, unsigned int mask )
