@@ -14,11 +14,11 @@ void perm3d_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int pr
 	cuda_kernel_sao( p, AM_2P_5S );	
 	cuda_kernel_sgl( p, gdx, gdy );
 	cuda_kernel_sbl( p, 1024, 1 );	
-	cuda_kernel_sep_i32( p, 2, nx	);
-	cuda_kernel_sep_i32( p, 3, ny	);
-	cuda_kernel_sep_i32( p, 4, nz	);
-	cuda_kernel_sep_i32( p, 5, lda	);
-	cuda_kernel_sep_i32( p, 6, ldb	);
+	cuda_kernel_sep_i32( p, 2, nx  );
+	cuda_kernel_sep_i32( p, 3, ny  );
+	cuda_kernel_sep_i32( p, 4, nz  );
+	cuda_kernel_sep_i32( p, 5, lda );
+	cuda_kernel_sep_i32( p, 6, ldb );
 }
 void perm2d_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc, int nx, int ny, int lda, int ldb )
 {
@@ -26,10 +26,10 @@ void perm2d_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int pr
 	cuda_kernel_sao( p, AM_2P_4S );	
 	cuda_kernel_sgl( p, (nx+31)>>5, (ny+31)>>5 );
 	cuda_kernel_sbl( p, 32, 32 );	
-	cuda_kernel_sep_i32( p, 2, nx	);
-	cuda_kernel_sep_i32( p, 3, ny	);
-	cuda_kernel_sep_i32( p, 4, lda	);
-	cuda_kernel_sep_i32( p, 5, ldb	);
+	cuda_kernel_sep_i32( p, 2, nx  );
+	cuda_kernel_sep_i32( p, 3, ny  );
+	cuda_kernel_sep_i32( p, 4, lda );
+	cuda_kernel_sep_i32( p, 5, ldb );
 }
 void permute( cuda_kernel_t* p, CUdeviceptr d_b, CUdeviceptr d_a, CUstream s )
 {
