@@ -9,7 +9,7 @@ typedef struct fftconvOp{
 	cuda_kernel_t	kfft[3];
 	cuda_kernel_t	kperm[3];
 	cuda_kernel_t	kcgemm;
-	size_t			divpt[3];
+	size_t		divpt[3];
 } fftconvOp_t;
 
 size_t	 fftconv_createOp( fftconvOp_t*, const cuda_context_t*, unsigned int, int, int, int, int, int );
