@@ -8,8 +8,8 @@ void gemv_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc,
 	cuda_context_create_kernel( p, p_ctx, knames[prc][i] );
 	cuda_kernel_sao( p, AM_3P_4S );
 	cuda_kernel_sep_i32( p, 4, (nx+1)>>s );
-	cuda_kernel_sep_i32( p, 5, ny		 );
-	cuda_kernel_sep_i32( p, 6, lda>>s	 );
+	cuda_kernel_sep_i32( p, 5, ny	     );
+	cuda_kernel_sep_i32( p, 6, lda>>s    );
 }
 void gemv( cuda_kernel_t* p, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, float aph, CUstream s )
 {
