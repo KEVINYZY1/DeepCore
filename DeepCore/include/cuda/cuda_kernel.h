@@ -7,7 +7,7 @@
 
 #define PA		0x2
 #define SA		0x1
-#define AM(i,n) ((n)<<((i)<<1))
+#define AM(i,n) 	((n)<<((i)<<1))
 
 typedef struct cuda_kernel{
 	CUfunction	id;	
