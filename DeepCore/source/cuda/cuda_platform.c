@@ -32,7 +32,7 @@ static float __get_device_peak( float n, int cc )
 	case 53: 
 	case 61:
 	case 62: n_cores_per_SM=128; break;
-	case 60: n_cores_per_SM=64;	 break;
+	case 60: n_cores_per_SM= 64; break;
 	}
 	return (n*n_cores_per_SM);
 }
