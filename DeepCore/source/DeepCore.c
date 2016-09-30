@@ -9,7 +9,7 @@
 
 static cuda_platform_t	*	g_pPlat	=NULL;
 static cuda_context_t	*	g_pCtx	=NULL;
-static char				*	g_pTemp	=NULL;
+static char		*	g_pTemp	=NULL;
 
 #define as_devptr(p) (CUdeviceptr)((uintptr_t)(p))
 
