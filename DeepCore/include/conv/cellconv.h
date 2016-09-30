@@ -7,8 +7,8 @@
 typedef struct cellconvOp{
 	cuda_kernel_t	kfft[3];
 	cuda_kernel_t	kcgemm;
-	size_t			adivpt;
-	size_t			bdivpt;
+	size_t		adivpt;
+	size_t		bdivpt;
 } cellconvOp_t;
 
 size_t	 cellconv_createOp( cellconvOp_t*, const cuda_context_t*, unsigned int, int, int, int, int, int );
