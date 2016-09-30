@@ -19,26 +19,26 @@ static const fft_kernel_prop_t fftkp_r2c[]=
 
 static const fft_kernel_prop_t fftkp_c2r[]=
 {
-	{ { "d_sfft64x64_c2r"			, "d_xfft64x64_c2r"			, "d_hfft64x64_c2r"			}, AM_3P_3S },
-	{ { "d_sfft64x64_c2r_frelu"		, "d_xfft64x64_c2r_frelu"		, "d_hfft64x64_c2r_frelu"		}, AM_3P_4S },
-	{ { "d_sfft64x64_c2r_felu"		, "d_xfft64x64_c2r_felu"		, "d_hfft64x64_c2r_felu"		}, AM_3P_4S },
-	{ { "d_sfft64x64_c2r_bias"		, "d_xfft64x64_c2r_bias"		, "d_hfft64x64_c2r_bias"		}, AM_4P_3S },
-	{ { "d_sfft64x64_c2r_bias_relu"		, "d_xfft64x64_c2r_bias_relu"		, "d_hfft64x64_c2r_bias_relu"		}, AM_4P_4S },
-	{ { "d_sfft64x64_c2r_bias_elu"		, "d_xfft64x64_c2r_bias_elu"		, "d_hfft64x64_c2r_bias_elu"		}, AM_4P_4S },
-	{ { "d_sfft64x64_c2r_xdiff"		, "d_xfft64x64_c2r_xdiff"		, "d_hfft64x64_c2r_xdiff"		}, AM_4P_3S },
-	{ { "d_sfft64x64_c2r_brelu"		, "d_xfft64x64_c2r_brelu"		, "d_hfft64x64_c2r_brelu"		}, AM_4P_4S },
-	{ { "d_sfft64x64_c2r_belu"		, "d_xfft64x64_c2r_belu"		, "d_hfft64x64_c2r_belu"		}, AM_4P_4S },
-	{ { "d_sfft64x64_c2r_filter"		, "d_xfft64x64_c2r_filter"		, "d_hfft64x64_c2r_filter"		}, AM_3P_3S },
-	{ { "d_sfft128x128_c2r"			, "d_xfft128x128_c2r"			, "d_hfft128x128_c2r"			}, AM_3P_3S },
-	{ { "d_sfft128x128_c2r_frelu"		, "d_xfft128x128_c2r_frelu"		, "d_hfft128x128_c2r_frelu"		}, AM_3P_4S },
-	{ { "d_sfft128x128_c2r_felu"		, "d_xfft128x128_c2r_felu"		, "d_hfft128x128_c2r_felu"		}, AM_3P_4S },	
-	{ { "d_sfft128x128_c2r_bias"		, "d_xfft128x128_c2r_bias"		, "d_hfft128x128_c2r_bias"		}, AM_4P_3S },
-	{ { "d_sfft128x128_c2r_bias_relu"	, "d_xfft128x128_c2r_bias_relu"		, "d_hfft128x128_c2r_bias_relu"		}, AM_4P_4S },
-	{ { "d_sfft128x128_c2r_bias_elu"	, "d_xfft128x128_c2r_bias_elu"		, "d_hfft128x128_c2r_bias_elu"		}, AM_4P_4S },
-	{ { "d_sfft128x128_c2r_xdiff"		, "d_xfft128x128_c2r_xdiff"		, "d_hfft128x128_c2r_xdiff"		}, AM_4P_3S },
-	{ { "d_sfft128x128_c2r_brelu"		, "d_xfft128x128_c2r_brelu"		, "d_hfft128x128_c2r_brelu"		}, AM_4P_4S },
-	{ { "d_sfft128x128_c2r_belu"		, "d_xfft128x128_c2r_belu"		, "d_hfft128x128_c2r_belu"		}, AM_4P_4S },
-	{ { "d_sfft128x128_c2r_filter"		, "d_xfft128x128_c2r_filter"		, "d_hfft128x128_c2r_filter"		}, AM_3P_3S }
+	{ { "d_sfft64x64_c2r"			, "d_xfft64x64_c2r"		, "d_hfft64x64_c2r"		}, AM_3P_3S },
+	{ { "d_sfft64x64_c2r_frelu"		, "d_xfft64x64_c2r_frelu"	, "d_hfft64x64_c2r_frelu"	}, AM_3P_4S },
+	{ { "d_sfft64x64_c2r_felu"		, "d_xfft64x64_c2r_felu"	, "d_hfft64x64_c2r_felu"	}, AM_3P_4S },
+	{ { "d_sfft64x64_c2r_bias"		, "d_xfft64x64_c2r_bias"	, "d_hfft64x64_c2r_bias"	}, AM_4P_3S },
+	{ { "d_sfft64x64_c2r_bias_relu"		, "d_xfft64x64_c2r_bias_relu"	, "d_hfft64x64_c2r_bias_relu"	}, AM_4P_4S },
+	{ { "d_sfft64x64_c2r_bias_elu"		, "d_xfft64x64_c2r_bias_elu"	, "d_hfft64x64_c2r_bias_elu"	}, AM_4P_4S },
+	{ { "d_sfft64x64_c2r_xdiff"		, "d_xfft64x64_c2r_xdiff"	, "d_hfft64x64_c2r_xdiff"	}, AM_4P_3S },
+	{ { "d_sfft64x64_c2r_brelu"		, "d_xfft64x64_c2r_brelu"	, "d_hfft64x64_c2r_brelu"	}, AM_4P_4S },
+	{ { "d_sfft64x64_c2r_belu"		, "d_xfft64x64_c2r_belu"	, "d_hfft64x64_c2r_belu"	}, AM_4P_4S },
+	{ { "d_sfft64x64_c2r_filter"		, "d_xfft64x64_c2r_filter"	, "d_hfft64x64_c2r_filter"	}, AM_3P_3S },
+	{ { "d_sfft128x128_c2r"			, "d_xfft128x128_c2r"		, "d_hfft128x128_c2r"		}, AM_3P_3S },
+	{ { "d_sfft128x128_c2r_frelu"		, "d_xfft128x128_c2r_frelu"	, "d_hfft128x128_c2r_frelu"	}, AM_3P_4S },
+	{ { "d_sfft128x128_c2r_felu"		, "d_xfft128x128_c2r_felu"	, "d_hfft128x128_c2r_felu"	}, AM_3P_4S },	
+	{ { "d_sfft128x128_c2r_bias"		, "d_xfft128x128_c2r_bias"	, "d_hfft128x128_c2r_bias"	}, AM_4P_3S },
+	{ { "d_sfft128x128_c2r_bias_relu"	, "d_xfft128x128_c2r_bias_relu"	, "d_hfft128x128_c2r_bias_relu"	}, AM_4P_4S },
+	{ { "d_sfft128x128_c2r_bias_elu"	, "d_xfft128x128_c2r_bias_elu"	, "d_hfft128x128_c2r_bias_elu"	}, AM_4P_4S },
+	{ { "d_sfft128x128_c2r_xdiff"		, "d_xfft128x128_c2r_xdiff"	, "d_hfft128x128_c2r_xdiff"	}, AM_4P_3S },
+	{ { "d_sfft128x128_c2r_brelu"		, "d_xfft128x128_c2r_brelu"	, "d_hfft128x128_c2r_brelu"	}, AM_4P_4S },
+	{ { "d_sfft128x128_c2r_belu"		, "d_xfft128x128_c2r_belu"	, "d_hfft128x128_c2r_belu"	}, AM_4P_4S },
+	{ { "d_sfft128x128_c2r_filter"		, "d_xfft128x128_c2r_filter"	, "d_hfft128x128_c2r_filter"	}, AM_3P_3S }
 };
 
 static const fft_kernel_prop_t cellfftkp_r2c[]=
