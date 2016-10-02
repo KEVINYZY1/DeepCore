@@ -4,10 +4,7 @@
 #include<cuda.h>
 #include<vector_types.h>
 #include"../dc_macro.h"
-
-#define PA		0x2
-#define SA		0x1
-#define AM(i,n) 	((n)<<((i)<<1))
+#include"../dc_argmask.h"
 
 typedef struct cuda_kernel{
 	CUfunction	id;	
