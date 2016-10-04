@@ -74,7 +74,7 @@ int cuda_context_create( cuda_context_t* p_ctx, char* p_temp )
 	void* p_devbin;
 	int i, n, p, q;	
 	cuDriverGetVersion(&i);
-	if(i<7000) 
+	if(i<8000) 
 		return ERROR_INVALID_DRIVER;
 	cuDevicePrimaryCtxRetain( &p_ctx->ctx, p_ctx->dev );
 	cuDevicePrimaryCtxSetFlags( p_ctx->dev, CU_CTX_SCHED_AUTO );
