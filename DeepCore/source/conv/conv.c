@@ -1,4 +1,5 @@
 ﻿#include"../../include/conv/conv.h"
+#include"../../include/blas/gemm.h"
 #include"../../include/blas/gemv.h"
 
 static void __generate_slider( unsigned int* p_slider, int m, int pm, int n, int pn, int ds, int fs, int inc, int st, int enb )
