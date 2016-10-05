@@ -9,7 +9,7 @@
 
 static cuda_platform_t	*	g_pPlat	=NULL;
 static cuda_context_t	*	g_pCtx	=NULL;
-static char				*	g_pTemp	=NULL;
+static char		*	g_pTemp	=NULL;
 
 #define as_devptr(p) (CUdeviceptr)((uintptr_t)(p))
 
@@ -254,8 +254,8 @@ DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_activationOp( dc_activati
 	if((*Op=(dc_activationOp)malloc(sizeof(activationOp_t)))==0)
 		return dc_error_out_of_memory;
 	n=((int)(shape>> 0))&0x1fff;
-	b=((int)(shape>>16))&0xffff;
-	c=((int)(shape>>31))&0x7fff;
+	b=((int)(shape>>13))&0xffff;
+	c=((int)(shape>>29))&0x7fff;
 	p=((int)(shape>>56))&0x3;
 	activation_createOp( (activationOp_t*)(*Op), &g_pCtx[idev], p, opcode, n, b, c );
 	return dc_success;

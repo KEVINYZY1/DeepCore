@@ -37,7 +37,7 @@ size_t bias_createOp( biasOp_t* Op, const cuda_context_t* p_ctx, int prc, int si
 	cuda_kernel_sbl( &Op->kupdate, block_shape[i].x+1, block_shape[i].y );
 	cuda_kernel_sgl( &Op->kupdate, gdx, gdy );
 	i=i<4?2:4;
-	cuda_kernel_sep_i32( &Op->kupdate, i+0, n	  );
+	cuda_kernel_sep_i32( &Op->kupdate, i+0, n     );
 	cuda_kernel_sep_i32( &Op->kupdate, i+1, pitch );
 	n=0;
 	if(gdy>1){ n=(AFFIS(nc,32)+gdx*nc)*sizeof(int);	}

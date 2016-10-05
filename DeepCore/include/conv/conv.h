@@ -1,12 +1,11 @@
 ﻿#ifndef __conv_h__
 #define __conv_h__
 
-#include"../../include/dc_argmask.h"
 #include"../../include/cuda/cuda_ctx.h"
 
 typedef struct convOp{
-	cuda_kernel_t	kernel;
-	CUdeviceptr		d_slider;
+	cuda_kernel_t kernel;
+	CUdeviceptr   d_slider;
 } convOp_t;
 
 int	 conv_createOp( convOp_t*, unsigned int*, const cuda_context_t*, int, int, int, int, int, int, int );

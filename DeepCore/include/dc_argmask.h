@@ -1,7 +1,9 @@
 #ifndef __dc_argmask_h__
 #define __dc_argmask_h__
 
-#include "../include/cuda/cuda_kernel.h"
+#define PA      0x2
+#define SA      0x1
+#define AM(i,n) ((n)<<((i)<<1))
 
 #define AM_P		 AM(0,PA)
 #define AM_2P		(AM(0,PA)|AM(1,PA))

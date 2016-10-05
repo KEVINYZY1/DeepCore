@@ -2,12 +2,11 @@
 #define __fft_h__
 
 #include"../../include/cuda/cuda_ctx.h"
-#include"../../include/dc_argmask.h"
 
-void create_fft_kernel_r2c( cuda_kernel_t*, const cuda_context_t*, unsigned int, unsigned int );
-void create_fft_kernel_c2r( cuda_kernel_t*, const cuda_context_t*, unsigned int, unsigned int );
-void create_cellfft_kernel_r2c( cuda_kernel_t*, const cuda_context_t*, unsigned int, unsigned int );
-void create_cellfft_kernel_c2r( cuda_kernel_t*, const cuda_context_t*, unsigned int, unsigned int );
+void create_fft_kernel_r2c( cuda_kernel_t*, const cuda_context_t*, int, int );
+void create_fft_kernel_c2r( cuda_kernel_t*, const cuda_context_t*, int, int );
+void create_cellfft_kernel_r2c( cuda_kernel_t*, const cuda_context_t*, int, int );
+void create_cellfft_kernel_c2r( cuda_kernel_t*, const cuda_context_t*, int, int );
 
 __forceinline CUresult fft2d( cuda_kernel_t* p_kernel, CUdeviceptr d_dst, CUdeviceptr d_src, CUstream s )
 {

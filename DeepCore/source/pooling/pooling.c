@@ -63,21 +63,21 @@ int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, 
 		{	
 			int s=k?(is_max?0:1):1;
 			n=k?(is_max?fsize:bsize):bsize;
-			cuda_kernel_sep_i32( p, i+1, fpitch>>s	);
-			cuda_kernel_sep_i32( p, i+2, bpitch		);
-			cuda_kernel_sep_i32( p, i+3, n			);
+			cuda_kernel_sep_i32( p, i+1, fpitch>>s );
+			cuda_kernel_sep_i32( p, i+2, bpitch    );
+			cuda_kernel_sep_i32( p, i+3, n	       );
 		}
 		else
 		{
 			n=k?fsize:bsize;
-			cuda_kernel_sep_i32( p, i+1, fn		 );
-			cuda_kernel_sep_i32( p, i+2, fpitch  );
-			cuda_kernel_sep_i32( p, i+3, bn		 );
-			cuda_kernel_sep_i32( p, i+4, bn		 );
-			cuda_kernel_sep_i32( p, i+5, bpitch  );
-			cuda_kernel_sep_i32( p, i+6, bt		 );
-			cuda_kernel_sep_i32( p, i+7, ps	     );
-			cuda_kernel_sep_i32( p, i+8, ps	     );
+			cuda_kernel_sep_i32( p, i+1, fn	    );
+			cuda_kernel_sep_i32( p, i+2, fpitch );
+			cuda_kernel_sep_i32( p, i+3, bn	    );
+			cuda_kernel_sep_i32( p, i+4, bn	    );
+			cuda_kernel_sep_i32( p, i+5, bpitch );
+			cuda_kernel_sep_i32( p, i+6, bt	    );
+			cuda_kernel_sep_i32( p, i+7, ps	    );
+			cuda_kernel_sep_i32( p, i+8, ps	    );
 			if(overlap){
 				cuda_kernel_sep_i32( p, i+ 9, st );
 				cuda_kernel_sep_i32( p, i+10, st );
@@ -90,7 +90,6 @@ int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, 
 	}
 	return SUCCESS;
 }
-
 void pooling_launch( poolingOp_t* Op, CUdeviceptr d_dst, CUdeviceptr d_src, int dir, CUstream s )
 {	
 	cuda_kernel_t* p=&Op->kpooling[dir];
@@ -101,7 +100,7 @@ void pooling_launch( poolingOp_t* Op, CUdeviceptr d_dst, CUdeviceptr d_src, int 
 void pooling_releaseOp( poolingOp_t* Op )
 {
 	if(Op->d_max_id){
-		cuMemFree(Op->d_max_id);
+		cuMemFree( Op->d_max_id );
 		Op->d_max_id=0;
 	}
 }

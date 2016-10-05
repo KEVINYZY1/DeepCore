@@ -6,11 +6,11 @@ static void __generate_slider( unsigned int* p_slider, int m, int pm, int n, int
 	int u, v, c, i;
 	for( c=0; c<inc; ++c )
 	{
-		for( v=0; v<fs; ++v ){
-			for( u=0; u<fs; ++u ){
-				*p_slider++=c*pm+(v*st*ds+u*st)*enb;
-			}
+	    for( v=0; v<fs; ++v ){
+	        for( u=0; u<fs; ++u ){
+		    *p_slider++=c*pm+(v*st*ds+u*st)*enb;
 		}
+	    }
 	}
 	for( i=inc*pm-(m<pm)*enb, pn-=n; pn>0; --pn ){ *p_slider++=i; }
 }
@@ -25,7 +25,7 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 		int m, pm, n, pn, vs, os, i, s, tile_y, is_bc, ldb, ldc; 
 		n=inc*fs*fs;
 		if(cuMemAlloc( &Op->d_slider, sizeof(int)*(pn=AFFIS(n,8)) )!=CUDA_SUCCESS)
-			return ERROR_OUT_OF_DEVICE_MEMORY;
+		    return ERROR_OUT_OF_DEVICE_MEMORY;
 		m=bat*ds*ds*enb;
 		pm=AFFIS(m,p_ctx->align);
 		__generate_slider( p_temp, m, pm, n, pn, ds, fs, st, inc, enb );
@@ -64,7 +64,7 @@ void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUde
 	cuda_kernel_sep_ptr( p, 1, d_a );
 	cuda_kernel_sep_ptr( p, 2, d_b );
 	if(Op->d_slider!=0){
-		cuda_kernel_sep_ptr( p, 3, Op->d_slider );
+	    cuda_kernel_sep_ptr( p, 3, Op->d_slider );
 	}
 	cuda_kernel_sep_f32( p, 3+(Op->d_slider!=0), alpha );
 	cuda_kernel_launch( p, s );
@@ -72,7 +72,7 @@ void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUde
 void conv_releaseOp( convOp_t* Op )
 {
 	if(Op->d_slider!=0){
-		cuMemFree(Op->d_slider);
-		Op->d_slider=0;
+	    cuMemFree(Op->d_slider);
+	    Op->d_slider=0;
 	}
 }

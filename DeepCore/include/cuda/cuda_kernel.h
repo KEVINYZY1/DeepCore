@@ -4,21 +4,18 @@
 #include<cuda.h>
 #include<vector_types.h>
 #include"../dc_macro.h"
-
-#define PA		0x2
-#define SA		0x1
-#define AM(i,n) ((n)<<((i)<<1))
+#include"../dc_argmask.h"
 
 typedef struct cuda_kernel{
-	CUfunction		id;	
-	unsigned int	gdx;
-	unsigned int	gdy;
-	ushort2			block;
-	unsigned int	smemnb;
-	unsigned int	arg_size;
-	void*			extra[5];
-	unsigned char	arg_ofs[16];
-	char			args[128];
+	CUfunction    id;	
+	unsigned int  gdx;
+	unsigned int  gdy;
+	ushort2       block;
+	unsigned int  smemnb;
+	unsigned int  arg_size;
+	void*         extra[5];
+	unsigned char arg_ofs[16];
+	char          args[128];
 } cuda_kernel_t;
 
 __forceinline void cuda_kernel_sao( cuda_kernel_t* p, unsigned int mask )

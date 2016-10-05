@@ -1,7 +1,6 @@
 ﻿#ifndef __bias_h__
 #define __bias_h__
 
-#include"../../include/dc_argmask.h"
 #include"../../include/cuda/cuda_ctx.h"
 
 typedef struct biasOp{
