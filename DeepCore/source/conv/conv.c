@@ -7,38 +7,40 @@ static void __generate_slider( unsigned int* p_slider, int m, int pm, int n, int
 	int u, v, c, i;
 	for( c=0; c<inc; ++c )
 	{
-	    for( v=0; v<fs; ++v ){
-	        for( u=0; u<fs; ++u ){
-		    *p_slider++=c*pm+(v*st*ds+u*st)*enb;
+		for( v=0; v<fs; ++v ){
+			for( u=0; u<fs; ++u ){
+				*p_slider++=c*pm+(v*st*ds+u*st)*enb;
+			}
 		}
-	    }
 	}
 	for( i=inc*pm-(m<pm)*enb, pn-=n; pn>0; --pn ){ *p_slider++=i; }
 }
 int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_ctx, int prc, int ds, int fs, int bat, int inc, int onc, int st )
 {
+	int enb, os, anr, bnr, cnr, lda, ldb, ldc;
 	static const char* knames[]={ "d_sconv_64x16", "d_sconv_64x16_bc", "d_sconv_128x32", "d_sconv_128x32_bc", "d_sconv_128x64", "d_sconv_128x64_bc", "d_sconv_128x128", "d_sconv_128x128_bc" };
 	cuda_kernel_t* p_kernel=&Op->kernel;
-	int enb=prc?2:4;
+
+	enb=prc?2:4;
+	anr=bat*ds*ds;
+	bnr=inc*fs*fs;
+	os=(ds-fs)/st+1;
+	lda=AFFIS(anr*enb,BASE_PITCH);
+	ldb=AFFIS(bnr*enb,BASE_PITCH);
+	ldc=AFFIS(cnr*enb,BASE_PITCH);
 	Op->d_slider=0;
 	if((ds!=fs)&(fs>1))
 	{
-		int m, pm, n, pn, vs, os, i, s, tile_y, is_bc, ldb, ldc; 
-		n=inc*fs*fs;
-		if(cuMemAlloc( &Op->d_slider, sizeof(int)*(pn=AFFIS(n,8)) )!=CUDA_SUCCESS)
+		int pn, vs, i, s, tile_y, is_bc; 
+		if(cuMemAlloc( &Op->d_slider, sizeof(int)*(pn=AFFIS(bnr,8)) )!=CUDA_SUCCESS)
 		    return ERROR_OUT_OF_DEVICE_MEMORY;
-		m=bat*ds*ds*enb;
-		pm=AFFIS(m,p_ctx->align);
-		__generate_slider( p_temp, m, pm, n, pn, ds, fs, st, inc, enb );
+		__generate_slider( p_temp, anr*enb, lda, bnr, pn, ds, fs, st, inc, enb );
 		cuMemcpyHtoD( Op->d_slider, p_temp, sizeof(int)*pn );	
-		os=(ds-fs)/st+1;
-		vs=AFFIS(bat*os*os,2);
-		ldc=AFFIS(vs*enb,p_ctx->align);
+		vs=AFFIS(anr,2);
 		i=(onc>16)+(onc>32)+(((onc&127)==0)|((onc&127)>64));
 		s=4+i;
 		tile_y=1<<s;
 		is_bc=(onc&(tile_y-1))!=0;
-		ldb=pn*sizeof(float);
 		cuda_context_create_kernel( p_kernel, p_ctx, knames[(i<<1)+is_bc] );
 		cuda_kernel_sao( p_kernel, AM_4P_9S );
 		cuda_kernel_sbl( p_kernel, i?(i<3?128:256):64, 1 );

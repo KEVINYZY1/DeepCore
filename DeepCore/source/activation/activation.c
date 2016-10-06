@@ -21,9 +21,9 @@ void activation_createOp( activationOp_t* Op, cuda_context_t* p_ctx, int prc, in
 	static const unsigned int argmask_fprop[]={ AM_3P_3S, AM_3P_3S };
 	static const unsigned int argmask_bprop[]={ AM_3P_3S, AM_4P_3S };
 
-	const unsigned int s=prc?3:2;
-	const unsigned int size=(bt*n*n+(prc?7:3))>>s;
-	const unsigned int pitch=AFFIS(size,64)>>s;
+	const unsigned int s=prc?1:2;
+	const unsigned int size=bt*n*n;
+	const unsigned int pitch=AFFIS(size,BASE_PITCH>>s);
 	const unsigned int bdx=1<<(5+(size>=64)+(size>=128)+(size>=256));
 	const unsigned int gdx=(size+bdx-1)/bdx;
 	Op->radix_ifunc.x=opcode;

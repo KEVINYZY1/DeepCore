@@ -2,27 +2,29 @@
 
 size_t fftconv_createOp( fftconvOp_t* Op, const cuda_context_t* p_ctx, unsigned int mask, int ds, int fs, int bat, int pnc, int qnc )
 {
-	unsigned int prc, dir, align, inc, onc, fft_size, os, pad, Sxy, lda, ldb;
+	int prc, dir, align, inc, onc, pad, fft_size, o, os, pad, Sxy, lda, ldb;
 	cuda_kernel_t* p_kernel;
 		
 	prc=mask&0x3;
 	dir=(mask>>2)&0x1;
 	align=prc?32:16;
-	pad=dir?(fs-1):0;
 	inc=dir?qnc:pnc;
 	onc=dir?pnc:qnc;
+	pad=dir?(fs-1):0;
 	ds+=(pad<<1);
-	fft_size=fft_get_exec_size(ds);
 	os=ds-pad;
+	fft_size=fft_get_exec_size(ds);
+	fft_size=fft_size<16:16:fft_size;
+	o=((fft_size>>4)-1)<<2;
 	lda=(bat>1)?bat:inc;	
 	lda=AFFIS(lda,align);
 	ldb=AFFIS(onc,align);
-	align=p_ctx->align/(prc?2:4);
+	align=BASE_PITCH>>(prc?1:2);
 	Sxy=((fft_size>>1)+1)*fft_size;
 
 	{
 		int is_ext=(ds!=fft_size)&(dir==0);
-		int i=(fft_size<=64?0:4)+is_ext+(dir<<1);
+		int i=o+is_ext+(dir<<1);
 		p_kernel=&Op->kfft[0];
 		create_fft_kernel_r2c( p_kernel, p_ctx, i, prc );
 		cuda_kernel_sgl( p_kernel, bat, inc );
@@ -30,14 +32,14 @@ size_t fftconv_createOp( fftconvOp_t* Op, const cuda_context_t* p_ctx, unsigned 
 		if(is_ext|dir){
 			cuda_kernel_sep_i32( p_kernel, 4, ds );
 		}
-		if(dir){
+		if(pad>0){
 			cuda_kernel_sep_i32( p_kernel, 5, pad );
 		}
 	}
 
 	{
 		p_kernel=&Op->kfft[1];
-		create_fft_kernel_r2c( p_kernel, p_ctx, (fft_size<=64?0:4)+(dir?3:1), prc );
+		create_fft_kernel_r2c( p_kernel, p_ctx, o+(dir?3:1), prc );
 		cuda_kernel_sgl( p_kernel, pnc, qnc );
 		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(pnc*fs*fs,align) );
 		cuda_kernel_sep_i32( p_kernel, 4, fs );
@@ -46,7 +48,7 @@ size_t fftconv_createOp( fftconvOp_t* Op, const cuda_context_t* p_ctx, unsigned 
 	{
 		int fused=(mask>>3)&0x1;
 		int acti_op=mask>>4;
-		int i=10*(fft_size>64)+fused*(dir?6:3)+(acti_op&0xf);
+		int i=10*(fft_size>>4)+fused*(dir?6:3)+(acti_op&0xf);
 		p_kernel=&Op->kfft[2];
 		create_fft_kernel_c2r( p_kernel, p_ctx, i, prc );
 		cuda_kernel_sgl( p_kernel, bat, onc );
@@ -74,7 +76,7 @@ size_t fftconv_createOp( fftconvOp_t* Op, const cuda_context_t* p_ctx, unsigned 
 }
 size_t fftconv_createOp_filter( fftconvOp_t* Op, const cuda_context_t* p_ctx, unsigned int mask, int psize, int pnc, int qsize, int qnc, int bat )
 {
-	unsigned int prc, align, enb, fft_size, Sxy, lda, ldb, a, b;
+	unsigned int prc, align, enb, fft_size, o, Sxy, lda, ldb, a, b;
 	cuda_kernel_t* p_kernel;
 
 	prc=mask&0x3;
@@ -82,13 +84,15 @@ size_t fftconv_createOp_filter( fftconvOp_t* Op, const cuda_context_t* p_ctx, un
 	align=prc?32:16;
 	lda=AFFIS(pnc,align);
 	ldb=AFFIS(qnc,align);
-	align=p_ctx->align/(prc?2:4);
-	fft_size=psize<=64?64:128;
+	align=BASE_PITCH>>(prc?1:2);
+	fft_size=fft_get_exec_size(ds);
+	fft_size=fft_size<16:16:fft_size;
+	o=((fft_size>>4)-1)<<2;
 	Sxy=((fft_size>>1)+1)*fft_size;
 
 	{
 		int is_ext=psize!=fft_size;
-		int i=(fft_size<=64?0:4)+is_ext;
+		int i=o+is_ext;
 		p_kernel=&Op->kfft[0];
 		create_fft_kernel_r2c( p_kernel, p_ctx, i, prc );
 		cuda_kernel_sgl( p_kernel, bat, pnc );
@@ -101,7 +105,7 @@ size_t fftconv_createOp_filter( fftconvOp_t* Op, const cuda_context_t* p_ctx, un
 
 	{
 		p_kernel=&Op->kfft[1];
-		create_fft_kernel_r2c( p_kernel, p_ctx, fft_size<=64?3:7, prc );
+		create_fft_kernel_r2c( p_kernel, p_ctx, o+3, prc );
 		cuda_kernel_sgl( p_kernel, bat, qnc );
 		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(bat*qsize*qsize,align) );
 		cuda_kernel_sep_i32( p_kernel, 4, qsize );
@@ -111,7 +115,7 @@ size_t fftconv_createOp_filter( fftconvOp_t* Op, const cuda_context_t* p_ctx, un
 	{
 		int n=psize-qsize+1;
 		p_kernel=&Op->kfft[2];
-		create_fft_kernel_c2r( p_kernel, p_ctx, fft_size<=64?9:19, prc );
+		create_fft_kernel_c2r( p_kernel, p_ctx, o+9, prc );
 		cuda_kernel_sgl( p_kernel, pnc, qnc );
 		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(pnc*n*n,align) );
 		cuda_kernel_sep_i32( p_kernel, 4, n );

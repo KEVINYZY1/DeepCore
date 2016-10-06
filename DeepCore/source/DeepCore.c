@@ -77,8 +77,9 @@ DEEPCOREAPIENTRY uint64_t DEEPCOREAPICALL dc_create_tensor_shape( unsigned int m
 }
 DEEPCOREAPIENTRY size_t DEEPCOREAPICALL dc_tensor_pitch( uint64_t shape )
 {
-	unsigned int mask, tt, pitch;
+	unsigned int mask, enb, tt, pitch;
 	mask=(unsigned int)(shape>>56);
+	enb=mask&0x3;
 	tt=mask&0xfc;
 	if(tt!=dcMaskTensorTypeFilter)
 	{
@@ -86,28 +87,29 @@ DEEPCOREAPIENTRY size_t DEEPCOREAPICALL dc_tensor_pitch( uint64_t shape )
 		int b=((int)(shape>>13))&0xffff;
 		int c=((int)(shape>>29))&0x7fff;
 		if(tt==dcMaskTensorTypeFullConnection){
-			pitch=AFFIS(c*n*n,64);
+			pitch=AFFIS(c*n*n*enb,BASE_PITCH);
 		} else
 		if(tt==dcMaskTensorTypeBias){
 			pitch=1;
 		} else {
-			pitch=AFFIS(b*n*n,64);
+			pitch=AFFIS(b*n*n*enb,BASE_PITCH);
 		}
 	} 
 	else 
 	{
 		int n=(shape>>0)&0x00ff;
 		int c=(shape>>5)&0xffff;
-		pitch=AFFIS(c*n*n,64);
+		pitch=AFFIS(c*n*n*enb,BASE_PITCH);
 	}
-	return (pitch*((mask&0x3)?2:4));
+	return pitch;
 }
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_tensor( void** p_devptr, uint64_t shape )
 {
 	CUdeviceptr devptr;
-	unsigned int mask, size, pitch, tt;
+	unsigned int mask, enb, size, pitch, tt;
 	size_t nb;
 	mask=(unsigned int)(shape>>56);
+	enb=mask&0x3;
 	tt=mask&0xfc;
 	if(tt!=dcMaskTensorTypeFilter)
 	{
@@ -115,14 +117,14 @@ DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_tensor( void** p_devptr, 
 		int b=(shape>>13)&0xffff;
 		int c=(shape>>29)&0x7fff;
 		if(tt==dcMaskTensorTypeFullConnection){
-			pitch=AFFIS(c*n*n,64);
+			pitch=AFFIS(c*n*n*enb,BASE_PITCH);
 			size=c*pitch;
 		} else
 		if(tt==dcMaskTensorTypeBias){
-			pitch=1;
+			pitch=enb;
 			size=c;
 		} else {
-			pitch=AFFIS(b*n*n,64);
+			pitch=AFFIS(b*n*n*enb,BASE_PITCH);
 			size=b*pitch;
 		}
 	} 
@@ -131,11 +133,11 @@ DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_tensor( void** p_devptr, 
 		int fs=(shape>> 0)&0x00ff;
 		int nc=(shape>> 5)&0x7fff;
 		int nf=(shape>>20)&0x7fff;
-		size=nc*fs*fs;
-		pitch=AFFIS(size,64);
+		size=nc*fs*fs*enb;
+		pitch=AFFIS(size,BASE_PITCH);
 		size=nf*pitch;
 	}
-	nb=(size+(tt==0)*(pitch==size))*((mask&0x3)?2:4);
+	nb=size+(tt==0)*(pitch==size);
 	if(cuMemAlloc( &devptr, nb )!=CUDA_SUCCESS)
 		return dc_error_out_of_device_memory;
 	cuMemsetD8( devptr, 0, nb );
