@@ -3,7 +3,7 @@
 
 int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, int prc, int fn, int bt, int nc, int ps, int st )
 {
-	int bn, fsize, bsize, fpitch, bpitch, overlap, argmask, i, k, n, bdx, gdx;	
+	int s, align, bn, fsize, bsize, fpitch, bpitch, overlap, argmask, i, k, n, bdx, gdx;	
 	const char* symbol[2];
 	cuda_kernel_t* p;
 
@@ -29,11 +29,13 @@ int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, 
 		}
 	};
 
+	s=prc?1:2;
+	align=BASE_PITCH>>s;
 	bn=(fn+st-1)/st;
 	fsize=bt*fn*fn;
 	bsize=bt*bn*bn;
-	fpitch=AFFIS(fsize,64);
-	bpitch=AFFIS(bsize,64);
+	fpitch=AFFIS(fsize,align);
+	bpitch=AFFIS(bsize,align);
 	Op->d_max_id=0;
 	if(is_max){
 		int enb=((ps==2)&((fn&1)==0))?1:4;
@@ -58,10 +60,10 @@ int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, 
 		cuda_context_create_kernel( p, p_ctx, symbol[k] );
 		cuda_kernel_sao( p, argmask );
 		if(is_max){ cuda_kernel_sep_ptr( p, 2, Op->d_max_id ); }			
-		cuda_kernel_sep_i32( p, i, fn	);
+		cuda_kernel_sep_i32( p, i, fn );
 		if((ps==2)&((fn&1)==0))
 		{	
-			int s=k?(is_max?0:1):1;
+			s=k?(is_max?0:1):1;
 			n=k?(is_max?fsize:bsize):bsize;
 			cuda_kernel_sep_i32( p, i+1, fpitch>>s );
 			cuda_kernel_sep_i32( p, i+2, bpitch    );
