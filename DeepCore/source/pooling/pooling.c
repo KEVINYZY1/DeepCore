@@ -29,8 +29,7 @@ int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, 
 		}
 	};
 
-	s=prc?1:2;
-	align=BASE_PITCH>>s;
+	align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
 	bn=(fn+st-1)/st;
 	fsize=bt*fn*fn;
 	bsize=bt*bn*bn;
