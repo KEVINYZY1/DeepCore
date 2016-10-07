@@ -84,7 +84,7 @@ size_t fftconv_createOp_filter( fftconvOp_t* Op, const cuda_context_t* p_ctx, un
 	align=prc?32:16;
 	lda=AFFIS(pnc,align);
 	ldb=AFFIS(qnc,align);
-align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
+        align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
 	fft_size=fft_get_exec_size(ds);
 	fft_size=fft_size<16:16:fft_size;
 	o=(fft_size>>4)-1;
