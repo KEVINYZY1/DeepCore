@@ -48,7 +48,7 @@ void activation_fprop( activationOp_t* Op, CUdeviceptr d_dst, CUdeviceptr d_src,
 	cuda_kernel_sep_ptr( p, 0, d_dst  );
 	cuda_kernel_sep_ptr( p, 1, d_src  );
 	cuda_kernel_sep_ptr( p, 2, d_bias );
-	cuda_kernel_sep_f32( p, 5, alpha );
+	cuda_kernel_sep_f32( p, 5, alpha  );
 	cuda_kernel_launch( p, s );
 }
 void activation_bprop( activationOp_t* Op, CUdeviceptr d_ydiff, CUdeviceptr d_ydata, CUdeviceptr d_xdiff, CUdeviceptr d_xdata, float alpha, CUstream s )
