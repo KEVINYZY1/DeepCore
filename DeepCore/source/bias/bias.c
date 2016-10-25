@@ -2,7 +2,7 @@
 
 size_t bias_createOp( biasOp_t* Op, const cuda_context_t* p_ctx, int prc, int size, int nc )
 {
-	int i, s, radix, n, pitch, gdx, gdy;
+	int align, radix, i, n, pitch, gdx, gdy;
 	static const char* symbols[][5]=
 	{
 		{
@@ -21,10 +21,11 @@ size_t bias_createOp( biasOp_t* Op, const cuda_context_t* p_ctx, int prc, int si
 		}
 	};
 	static const struct{ unsigned char x, y; } block_shape[4]={{31,8},{63,1},{127,1},{255,1}};
-	s=prc?1:2;
+	
+	align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
 	radix=prc?8:4;
 	n=(size+radix-1)/radix;
-	pitch=AFFIS(size,BASE_PITCH>>s)/radix;
+	pitch=AFFIS(size,align)/radix;
 	radix=p_ctx->n_sm<<3;
 	i=(n>=64)+(n>=128)+(n>=256)+(nc>radix);
 	gdx=nc;

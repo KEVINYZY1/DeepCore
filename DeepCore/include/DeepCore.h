@@ -21,18 +21,18 @@
 #include<cuda.h>
 
 #define dcMaskPrecisionFloat              0x0
-#define dcMaskPrecisionMixed              0x1
-#define dcMaskPrecisionHalf               0x2
+#define dcMaskPrecisionMixed              0x2
+#define dcMaskPrecisionHalf               0x6
 
 #define dcMaskTensorTypeFilter            0x4
 #define dcMaskTensorTypeBias              0x5
 #define dcMaskTensorTypeFullConnection    0x6
 
-#define dcMaskConvFused                   0x2
-#define dcMaskConvFilter                  0x4
+#define dcMaskConvFused					  0x8
+#define dcMaskConvFilter                  0x10
 
-#define	dcMaskActivationRelu              0x0
-#define	dcMaskActivationElu               0x8
+#define	dcMaskActivationRelu              0x10
+#define	dcMaskActivationElu               0x11
 
 #define dcMaskPoolingAvg                  0x0
 #define dcMaskPoolingMax                  0x4
@@ -62,7 +62,6 @@ typedef enum dc_status{
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_init();
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_set_device( int );
 DEEPCOREAPIENTRY uint64_t    DEEPCOREAPICALL dc_create_tensor_shape( unsigned int, int, int, int );
-DEEPCOREAPIENTRY size_t      DEEPCOREAPICALL dc_get_tensor_pitch( uint64_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_tensor( void**, uint64_t );
 
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_convOp( dc_convOp*, int, unsigned int, uint64_t, uint64_t, int );
@@ -72,10 +71,10 @@ DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_poolingOp( dc_poolingOp*,
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_biasOp( dc_biasOp*, size_t*, int, uint64_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_activationOp( dc_activationOp*, int, unsigned int, uint64_t );
 				 			 
-DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_conv( dc_convOp, void*, const void*, const void*, const void*, float, float*, CUstream );
-DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_fftconv( dc_fftconvOp, void*, void*, const void*, const void*, const void*, float, float*, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_conv( dc_convOp, void*, const void*, const void*, const void*, float, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_fftconv( dc_fftconvOp, void*, void*, const void*, const void*, const void*, const float*, CUstream );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_fftconv_filter( dc_fftconvOp, void*, void*, const void*, const void*, float, CUstream );
-DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_cellconv( dc_cellconvOp, void*, void*, const void*, const void*, const void*, float, float*, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_cellconv( dc_cellconvOp, void*, void*, const void*, const void*, const void*, const float*, CUstream );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_cellconv_filter( dc_cellconvOp, void*, void*, const void*, const void*, float, CUstream );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_pooling( dc_poolingOp, void*, const void*, int, CUstream );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_update_bias( dc_biasOp, void*, void*, const void*, float, CUstream );

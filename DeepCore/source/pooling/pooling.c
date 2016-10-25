@@ -3,7 +3,7 @@
 
 int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, int prc, int fn, int bt, int nc, int ps, int st )
 {
-	int s, align, bn, fsize, bsize, fpitch, bpitch, overlap, argmask, i, k, n, bdx, gdx;	
+	int align, bn, fsize, bsize, fpitch, bpitch, overlap, argmask, i, k, n, bdx, gdx;	
 	const char* symbol[2];
 	cuda_kernel_t* p;
 
@@ -62,7 +62,7 @@ int pooling_createOp( poolingOp_t* Op, const cuda_context_t* p_ctx, int is_max, 
 		cuda_kernel_sep_i32( p, i, fn );
 		if((ps==2)&((fn&1)==0))
 		{	
-			s=k?(is_max?0:1):1;
+			int s=k?(is_max?0:1):1;
 			n=k?(is_max?fsize:bsize):bsize;
 			cuda_kernel_sep_i32( p, i+1, fpitch>>s );
 			cuda_kernel_sep_i32( p, i+2, bpitch    );

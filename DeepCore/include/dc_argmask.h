@@ -1,20 +1,20 @@
 #ifndef __dc_argmask_h__
 #define __dc_argmask_h__
 
-#define PA      0x2
-#define SA      0x1
-#define AM(i,n) ((n)<<((i)<<1))
+#define PA         0x2
+#define SA         0x1
+#define AM(i,n)    ((n)<<((i)<<1))
 
-#define AM_P		 AM(0,PA)
+#define AM_P		(AM(0,PA))
 #define AM_2P		(AM(0,PA)|AM(1,PA))
 #define AM_3P		(AM(0,PA)|AM(1,PA)|AM(2,PA))
 #define AM_4P		(AM(0,PA)|AM(1,PA)|AM(2,PA)|AM(3,PA))
 #define AM_5P		(AM(0,PA)|AM(1,PA)|AM(2,PA)|AM(3,PA)|AM(4,PA))
 
 #define AM_2S(i)	(AM(i,SA)|AM(i+1,SA))
-#define AM_3S(i)	(AM(i,SA)|AM(i+1,SA))
-#define AM_4S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA))
-#define AM_5S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA))
+#define AM_3S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA))
+#define AM_4S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA))
+#define AM_5S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA)|AM(i+4,SA))
 #define AM_6S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA)|AM(i+4,SA)|AM(i+5,SA))
 #define AM_7S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA)|AM(i+4,SA)|AM(i+5,SA)|AM(i+6,SA))
 #define AM_8S(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA)|AM(i+4,SA)|AM(i+5,SA)|AM(i+6,SA)|AM(i+7,SA))
@@ -25,20 +25,20 @@
 #define AM_DS(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA)|AM(i+4,SA)|AM(i+5,SA)|AM(i+6,SA)|AM(i+7,SA)|AM(i+8,SA)|AM(i+9,SA)|AM(i+10,SA)|AM(i+11,SA)|AM(i+12,SA))
 #define AM_ES(i)	(AM(i,SA)|AM(i+1,SA)|AM(i+2,SA)|AM(i+3,SA)|AM(i+4,SA)|AM(i+5,SA)|AM(i+6,SA)|AM(i+7,SA)|AM(i+8,SA)|AM(i+9,SA)|AM(i+10,SA)|AM(i+11,SA)|AM(i+12,SA)|AM(i+13,SA))
 
-#define AM_P_1S		(AM(0,PA)|AM(1,SA))
-#define AM_P_2S		(AM(0,PA)|AM_2S(1))
-#define AM_P_3S		(AM(0,PA)|AM_3S(1))
-#define AM_P_4S		(AM(0,PA)|AM_4S(1))
-#define AM_P_5S		(AM(0,PA)|AM_5S(1))
-#define AM_P_6S		(AM(0,PA)|AM_6S(1))
-#define AM_P_7S		(AM(0,PA)|AM_7S(1))
-#define AM_P_8S		(AM(0,PA)|AM_8S(1))
-#define AM_P_9S		(AM(0,PA)|AM_9S(1))
-#define AM_P_AS		(AM(0,PA)|AM_AS(1))
-#define AM_P_BS		(AM(0,PA)|AM_BS(1))
-#define AM_P_CS		(AM(0,PA)|AM_CS(1))
-#define AM_P_DS		(AM(0,PA)|AM_DS(1))
-#define AM_P_ES		(AM(0,PA)|AM_ES(1))
+#define AM_P_1S		(AM_P|AM(1,SA))
+#define AM_P_2S		(AM_P|AM_2S(1))
+#define AM_P_3S		(AM_P|AM_3S(1))
+#define AM_P_4S		(AM_P|AM_4S(1))
+#define AM_P_5S		(AM_P|AM_5S(1))
+#define AM_P_6S		(AM_P|AM_6S(1))
+#define AM_P_7S		(AM_P|AM_7S(1))
+#define AM_P_8S		(AM_P|AM_8S(1))
+#define AM_P_9S		(AM_P|AM_9S(1))
+#define AM_P_AS		(AM_P|AM_AS(1))
+#define AM_P_BS		(AM_P|AM_BS(1))
+#define AM_P_CS		(AM_P|AM_CS(1))
+#define AM_P_DS		(AM_P|AM_DS(1))
+#define AM_P_ES		(AM_P|AM_ES(1))
 
 #define AM_2P_1S	(AM_2P|AM(2,SA))
 #define AM_2P_2S	(AM_2P|AM_2S(2))

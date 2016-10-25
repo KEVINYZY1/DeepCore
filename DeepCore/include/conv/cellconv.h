@@ -13,7 +13,7 @@ typedef struct cellconvOp{
 
 size_t cellconv_createOp( cellconvOp_t*, const cuda_context_t*, unsigned int, int, int, int, int, int );
 size_t cellconv_createOp_filter( cellconvOp_t*, const cuda_context_t*, unsigned int, int, int, int, int, int );
-void   cellconv( cellconvOp_t*, CUdeviceptr, CUdeviceptr, CUdeviceptr, CUdeviceptr, CUdeviceptr, float, float*, CUstream );
+void   cellconv( cellconvOp_t*, CUdeviceptr, CUdeviceptr, CUdeviceptr, CUdeviceptr, CUdeviceptr, const float*, CUstream );
 void   cellconv_filter( cellconvOp_t*, CUdeviceptr, CUdeviceptr, CUdeviceptr, CUdeviceptr, float, CUstream );
 
 #endif

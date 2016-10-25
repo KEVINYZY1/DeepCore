@@ -4,8 +4,7 @@
 static void __generate_slider( unsigned int* p_slider, int m, int pm, int n, int pn, int ds, int fs, int inc, int st, int enb )
 {
 	int u, v, c, i;
-	for( c=0; c<inc; ++c )
-	{
+	for( c=0; c<inc; ++c ){
 		for( v=0; v<fs; ++v ){
 			for( u=0; u<fs; ++u ){
 				*p_slider=c*pm+(v*st*ds+u*st)*enb; ++p_slider;
@@ -35,7 +34,7 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 	ldc=AFFIS(cnr*enb,BASE_PITCH);
 	Op->d_slider=0;
 	Op->flag=0;
-	if((ds!=fs)&(fs>1))
+	if(fs>1)
 	{
 		int pn, vs, i, k, s, tile_y;
 		static const char* knames[]=
@@ -50,7 +49,7 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 			"d_sconv_128x128_ldc_bc", "d_sconv_128x128_relu_ldc_bc", "d_sconv_128x128_elu_ldc_bc", "d_sconv_128x128_bias_ldc_bc", "d_sconv_128x128_bias_relu_ldc_bc", "d_sconv_128x128_bias_elu_ldc_bc"
 		};
 		i=(onc>32)+(((onc&127)==0)|((onc&127)>64));
-		Op->flag=(p_ctx->arch>=50)&((inc*fs*fs)<=(p_ctx->cmemnb-128))&(i==2);
+		Op->flag=(p_ctx->arch>=50)&((bnr*4)<=(p_ctx->cmemnb-128))&(i==2);
 		pn=AFFIS(bnr,8);
 		if(Op->flag){
 			cuModuleGetGlobal( &Op->d_slider, NULL, p_ctx->module, "c_slider" );
@@ -67,26 +66,28 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 		k=12*i+6*((onc&(tile_y-1))!=0)+3*add_bias+atvop;
 		i=k%6;
 		cuda_context_create_kernel( p_kernel, p_ctx, knames[k] );
-		cuda_kernel_sao( p_kernel, k<36?(i<3?AM_4P_BS:AM_5P_BS):(i<3?AM_3P_BS:AM_4P_BS) );
+		cuda_kernel_sao( p_kernel, k<36?(i<3?AM_4P_AS:AM_5P_AS):(i<3?AM_3P_AS:AM_4P_AS) );
 		cuda_kernel_sbl( p_kernel, k<24?128:256, 1 );
 		cuda_kernel_sgl( p_kernel, (vs+127)>>7, (onc+tile_y-1)>>s );
+		if(Op->flag==0){
+			cuda_kernel_sep_ptr( p_kernel, 3, Op->d_slider );
+		}
 		i=(Op->flag==0)+add_bias;
-		cuda_kernel_sep_i32( p_kernel, 5+i, ldc );
-		cuda_kernel_sep_i32( p_kernel, 6+i, ldb );
+		cuda_kernel_sep_i32( p_kernel, 4+i, ldc );
+		cuda_kernel_sep_i32( p_kernel, 5+i, ldb );
+		cuda_kernel_sep_i32( p_kernel, 6+i, os  );
 		cuda_kernel_sep_i32( p_kernel, 7+i, os  );
-		cuda_kernel_sep_i32( p_kernel, 8+i, os  );
+		cuda_kernel_sep_i32( p_kernel, 8+i, ds  );
 		cuda_kernel_sep_i32( p_kernel, 9+i, ds  );
-		cuda_kernel_sep_i32( p_kernel,10+i, ds  );
-		cuda_kernel_sep_i32( p_kernel,11+i, pn  );
-		cuda_kernel_sep_i32( p_kernel,12+i, vs  );
-		cuda_kernel_sep_i32( p_kernel,13+i, onc );
-	} else
-	if(fs==1){
+		cuda_kernel_sep_i32( p_kernel,10+i, pn  );
+		cuda_kernel_sep_i32( p_kernel,11+i, vs  );
+		cuda_kernel_sep_i32( p_kernel,12+i, onc );
+	} else {
 		gemm_create_kernel( p_kernel, p_ctx, prc, anr, bnr, onc, lda, ldb, ldc );
 	}
 	return SUCCESS;
 }
-void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUdeviceptr d_bias, float alpha, float beta, CUstream s )
+void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUdeviceptr d_bias, float alpha, CUstream s )
 {
 	cuda_kernel_t* p=&Op->kernel;
 	int b0=(Op->flag==0)&(Op->d_slider!=0);
@@ -95,13 +96,9 @@ void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUde
 	cuda_kernel_sep_ptr( p, 1, d_a );
 	cuda_kernel_sep_ptr( p, 2, d_b );
 	if(b1){
-		cuda_kernel_sep_ptr( p, 3, d_bias );
-	}
-	if(b0){
-	    cuda_kernel_sep_ptr( p, 3+b1, Op->d_slider );
+		cuda_kernel_sep_ptr( p, 3+b0, d_bias );
 	}
 	cuda_kernel_sep_f32( p, 3+b0+b1, alpha );
-	cuda_kernel_sep_f32( p, 4+b0+b1, beta  );
 	cuda_kernel_launch( p, s );
 }
 void conv_releaseOp( convOp_t* Op )

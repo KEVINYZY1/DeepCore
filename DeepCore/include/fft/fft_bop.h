@@ -26,7 +26,7 @@ __forceinline unsigned int __popc( unsigned int n )
 __forceinline int __bffs( unsigned int n )
 {
 	int p, s;
-	s=(n<256)?0:((n<65536)?8:((n<(1<<24))?16:24));
+	s=(n<256)?0:(n<65536?8:(n<0x00ff0000?16:24));
 	p=s+g_iBFS[(n>>s)&0xff];
 	return p;
 }

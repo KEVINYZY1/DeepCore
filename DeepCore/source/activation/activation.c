@@ -21,10 +21,12 @@ void activation_createOp( activationOp_t* Op, cuda_context_t* p_ctx, int prc, in
 	static const unsigned int argmask_fprop[]={ AM_3P_3S, AM_3P_3S };
 	static const unsigned int argmask_bprop[]={ AM_3P_3S, AM_4P_3S };
 
-	const unsigned int size=bt*n*n;
-	const unsigned int pitch=AFFIS(size,prc?(BASE_PITCH/2):(BASE_PITCH/4));
-	const unsigned int bdx=1<<(5+(size>=64)+(size>=128)+(size>=256));
-	const unsigned int gdx=(size+bdx-1)/bdx;
+	int size=bt*n*n;
+	int align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
+	int pitch=AFFIS(size,align);
+	int bdx=1<<(5+(size>=64)+(size>=128)+(size>=256));
+	int gdx=(size+bdx-1)/bdx;
+	opcode-=1;
 	Op->radix_ifunc.x=opcode;
 	Op->radix_ifunc.y=prc?8:4;
 
@@ -48,7 +50,7 @@ void activation_fprop( activationOp_t* Op, CUdeviceptr d_dst, CUdeviceptr d_src,
 	cuda_kernel_sep_ptr( p, 0, d_dst  );
 	cuda_kernel_sep_ptr( p, 1, d_src  );
 	cuda_kernel_sep_ptr( p, 2, d_bias );
-	cuda_kernel_sep_f32( p, 5, alpha  );
+	cuda_kernel_sep_f32( p, 5, alpha );
 	cuda_kernel_launch( p, s );
 }
 void activation_bprop( activationOp_t* Op, CUdeviceptr d_ydiff, CUdeviceptr d_ydata, CUdeviceptr d_xdiff, CUdeviceptr d_xdata, float alpha, CUstream s )

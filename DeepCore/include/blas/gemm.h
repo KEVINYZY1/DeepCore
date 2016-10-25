@@ -4,6 +4,7 @@
 #include"../../include/cuda/cuda_ctx.h"
 
 void gemm_create_kernel( cuda_kernel_t*, const cuda_context_t*, int, int, int, int, int, int, int );
+void gemv_create_kernel( cuda_kernel_t*, const cuda_context_t*, int, int, int, int );
 void gemm( cuda_kernel_t*, CUdeviceptr, CUdeviceptr, CUdeviceptr, float, CUstream );
 
 #endif

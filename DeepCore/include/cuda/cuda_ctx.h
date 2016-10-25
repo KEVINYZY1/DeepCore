@@ -8,12 +8,13 @@
 static const unsigned short g_fftRF_ofs[]={ 0, 16, 32, 64, 128, 256, 512 };
 
 typedef struct cuda_context{
-	CUcontext   ctx;
-	CUmodule    module;
-	CUdeviceptr d_global;
-	CUdevice    dev;
+	CUcontext	ctx;
+	CUmodule	module;
+	CUdeviceptr	d_global;
+	CUdevice	dev;
 	int         arch;
 	int         n_sm;
+	int			cmemnb;
 	int         max_nbx;
 	int         max_nby;
 	int         max_block_size;

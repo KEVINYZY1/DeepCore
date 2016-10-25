@@ -1,138 +1,232 @@
 ﻿#include"../../include/conv/fftconv.h"
 
-size_t fftconv_createOp( fftconvOp_t* Op, const cuda_context_t* p_ctx, unsigned int mask, int ds, int fs, int bat, int pnc, int qnc )
+int fftconv_createOp( fftconvOp_t* Op, size_t* p_auxnb, const cuda_context_t* p_ctx, unsigned int mask, int ds, int fs, int bat, int pnc, int qnc )
 {
-	int prc, dir, align, inc, onc, pad, fft_size, o, os, pad, Sxy, lda, ldb;
+	int prc, dir, align, inc, onc, pad, fft_size, os, Sxy, axis, radix;
 	cuda_kernel_t* p_kernel;
-		
-	prc=mask&0x3;
-	dir=(mask>>2)&0x1;
-	align=prc?32:16;
+
+	Op->n_kernels=bat<=16?4:7;
+	if((Op->p_kernel=(cuda_kernel_t*)malloc(Op->n_kernels*sizeof(cuda_kernel_t)))==0)
+		return ERROR_OUT_OF_MEMORY;
+	dir=mask&0x1;
+	pad=fs-1;
+	Sxy=ds+(dir?(pad<<1):0);
+	fft_size=fft_get_exec_size(Sxy);
+	if(fft_size>128) return ERROR_OUT_OF_MAX_SIZE;	
+	prc=(mask>>1)&0x3;
+	os=Sxy-pad;
 	inc=dir?qnc:pnc;
 	onc=dir?pnc:qnc;
-	pad=dir?(fs-1):0;
-	ds+=(pad<<1);
-	os=ds-pad;
-	fft_size=fft_get_exec_size(ds);
-	fft_size=fft_size<16:16:fft_size;
-	o=(fft_size>>4)-1;
-	lda=(bat>1)?bat:inc;	
-	lda=AFFIS(lda,align);
-	ldb=AFFIS(onc,align);
+	fft_size=fft_size<16?16:fft_size;
+	axis=__bffs(fft_size)-4;
 	align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
-	Sxy=((fft_size>>1)+1)*fft_size;
+	radix=fft_size<32?8:4;
 
 	{
 		int is_ext=(ds!=fft_size)&(dir==0);
-		int i=(o<<2)+is_ext+(dir<<1);
-		p_kernel=&Op->kfft[0];
-		create_fft_kernel_r2c( p_kernel, p_ctx, i, prc );
-		cuda_kernel_sgl( p_kernel, bat, inc );
-		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(bat*ds*ds,align)>>(1^is_ext) );
-		if(is_ext|dir){
-			cuda_kernel_sep_i32( p_kernel, 4, ds );
+		int ldr=AFFIS(bat*ds*ds,align);
+		p_kernel=&Op->p_kernel[0];
+		create_fft_kernel_r2c( p_kernel, p_ctx, (axis<<2)+is_ext+(dir<<1), prc );
+		if(fft_size>32)
+		{
+			cuda_kernel_sgl( p_kernel, bat, inc );
+			cuda_kernel_sep_i32( p_kernel, 3, (is_ext|dir)?ldr:(ldr>>1) );
+			if(is_ext|dir){
+				cuda_kernel_sep_i32( p_kernel, 4, ds );
+				cuda_kernel_sep_i32( p_kernel, 5, ds );
+			}
+			if(dir){
+				cuda_kernel_sep_i32( p_kernel, 6, pad );
+				cuda_kernel_sep_i32( p_kernel, 7, pad );
+			}
 		}
-		if(pad>0){
-			cuda_kernel_sep_i32( p_kernel, 5, pad );
+		else
+		{
+			int n=bat*inc;
+			cuda_kernel_sgl( p_kernel, (n+radix-1)/radix, 1 );
+			cuda_kernel_sep_i32( p_kernel, 3, ldr );
+			if(is_ext|dir){
+				cuda_kernel_sep_i32( p_kernel, 4, ds );
+				cuda_kernel_sep_i32( p_kernel, 5, ds );
+			}
+			if(dir==0){
+				cuda_kernel_sep_i32( p_kernel, 4+(is_ext<<1), bat );
+				cuda_kernel_sep_i32( p_kernel, 5+(is_ext<<1), n   );
+			} else {
+				cuda_kernel_sep_i32( p_kernel, 6, pad );
+				cuda_kernel_sep_i32( p_kernel, 7, pad );
+				cuda_kernel_sep_i32( p_kernel, 8, bat );
+				cuda_kernel_sep_i32( p_kernel, 9, n   );
+			}
 		}
 	}
 
 	{
-		p_kernel=&Op->kfft[1];
-		create_fft_kernel_r2c( p_kernel, p_ctx, (o<<2)+(dir?3:1), prc );
-		cuda_kernel_sgl( p_kernel, pnc, qnc );
-		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(pnc*fs*fs,align) );
-		cuda_kernel_sep_i32( p_kernel, 4, fs );
+		int ldr=AFFIS(pnc*fs*fs,align);
+		p_kernel=&Op->p_kernel[1];
+		create_fft_kernel_r2c( p_kernel, p_ctx, (axis<<2)+(dir?3:1), prc );
+		cuda_kernel_sep_i32( p_kernel, 3, ldr );
+		cuda_kernel_sep_i32( p_kernel, 4, fs  );
+		cuda_kernel_sep_i32( p_kernel, 5, fs  );
+		if(fft_size>32){
+			cuda_kernel_sgl( p_kernel, pnc, qnc );
+		} else {
+			int n=pnc*qnc;
+			cuda_kernel_sgl( p_kernel, (n+radix-1)/radix, 1 );
+			cuda_kernel_sep_i32( p_kernel, 6, pnc );
+			cuda_kernel_sep_i32( p_kernel, 7, n   );
+		}
 	}
 
 	{
 		int fused=(mask>>3)&0x1;
-		int acti_op=mask>>4;
-		int i=10*o+fused*(dir?6:3)+(acti_op&0xf);
-		p_kernel=&Op->kfft[2];
-		create_fft_kernel_c2r( p_kernel, p_ctx, i, prc );
-		cuda_kernel_sgl( p_kernel, bat, onc );
-		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(bat*os*os,align) );
-		cuda_kernel_sep_i32( p_kernel, 4, os );
+		int atvop=mask>>4;
+		int ldr=AFFIS(bat*os*os,align);
+		int o=fused+(atvop!=0);
+		p_kernel=&Op->p_kernel[2];
+		create_fft_kernel_c2r( p_kernel, p_ctx, 10*axis+fused*(dir?6:3)+atvop, prc );
+		cuda_kernel_sep_i32( p_kernel, o+3, ldr );
+		cuda_kernel_sep_i32( p_kernel, o+4, os  );
+		cuda_kernel_sep_i32( p_kernel, o+5, os  );
+		if(fft_size>32){
+			cuda_kernel_sgl( p_kernel, bat, onc );
+		} else {
+			int n=bat*onc;
+			cuda_kernel_sgl( p_kernel, (n+radix-1)/radix, 1 );
+			cuda_kernel_sep_i32( p_kernel, o+6, bat );
+			cuda_kernel_sep_i32( p_kernel, o+7, n   );
+		}
 	}
 
-	if(bat>1){
-		perm3d_create_kernel( &Op->kperm[0], p_ctx, prc, 0, Sxy, bat, inc, Sxy, lda );
-		perm3d_create_kernel( &Op->kperm[2], p_ctx, prc, 2, bat, onc, Sxy, lda, Sxy );
-		cgemm_create_kernel( &Op->kcgemm, p_ctx , prc, Sxy, bat, inc, onc, lda, ldb, lda );
-	} else {
-		perm2d_create_kernel( &Op->kperm[0], p_ctx, prc, Sxy, inc, Sxy, lda );
-		perm2d_create_kernel( &Op->kperm[2], p_ctx, prc, onc, Sxy, ldb, Sxy );
-		cgemv_create_kernel( &Op->kcgemm, p_ctx, prc, Sxy, inc, onc, lda, ldb, ldb );
+	Sxy=((fft_size>>1)+1)*fft_size;
+	if(Op->n_kernels==4)
+	{		
+		cgemm_flat_create_kernel( &Op->p_kernel[3], p_ctx, prc, Sxy, bat, inc, onc, dir );
+		Sxy*=(prc?4:8);
+		Op->divpt[0]=Sxy*bat*inc;
+		Op->divpt[1]=Sxy*inc*onc;
+		*p_auxnb=Op->divpt[0]+Op->divpt[1]+Sxy*bat*onc;
 	}
-	perm3d_create_kernel( &Op->kperm[1], p_ctx, prc, 1^dir, Sxy, pnc, qnc, Sxy, ldb );
-	cuda_kernel_sep_f32( &Op->kcgemm, 3, (float)(1.0/(fft_size*fft_size)) );
-
-	Sxy*=(prc?4:8);
-	Op->divpt[0]=Sxy*bat*inc;
-	Op->divpt[1]=Sxy*lda*((bat>1)?inc:1);
-	Op->divpt[2]=Op->divpt[1]+Sxy*inc*ldb;
-	return (Op->divpt[2]<<1);
+	else
+	{
+		int n=prc?32:16;
+		int lda=bat>1?bat:inc;
+		int ldb=AFFIS(onc,n);
+		lda=AFFIS(lda,n);
+		if(bat>1){
+			cgemm_create_kernel( &Op->p_kernel[3], p_ctx , prc, Sxy, bat, inc, onc, lda, ldb, lda );
+			perm3d_create_kernel( &Op->p_kernel[4], p_ctx, prc, 0, Sxy, bat, inc, Sxy, lda );
+			perm3d_create_kernel( &Op->p_kernel[6], p_ctx, prc, 2, bat, onc, Sxy, lda, Sxy );
+		} else {
+			cgemv_create_kernel( &Op->p_kernel[3], p_ctx, prc, Sxy, inc, onc, lda, ldb, ldb );
+			perm2d_create_kernel( &Op->p_kernel[4], p_ctx, prc, Sxy, inc, Sxy, lda );
+			perm2d_create_kernel( &Op->p_kernel[6], p_ctx, prc, onc, Sxy, ldb, Sxy );
+		}
+		perm3d_create_kernel( &Op->p_kernel[5], p_ctx, prc, 1^dir, Sxy, pnc, qnc, Sxy, ldb );
+		Sxy*=(prc?4:8);
+		Op->divpt[0]=Sxy*bat*inc;
+		Op->divpt[1]=Sxy*lda*(bat>1?inc:1);
+		Op->divpt[2]=Op->divpt[1]+Sxy*inc*ldb;
+		*p_auxnb=(Op->divpt[2]<<1);
+	}
+	cuda_kernel_sep_f32( &Op->p_kernel[3], 3, (float)(1.0/(fft_size*fft_size)) );
+	return SUCCESS;
 }
-size_t fftconv_createOp_filter( fftconvOp_t* Op, const cuda_context_t* p_ctx, unsigned int mask, int psize, int pnc, int qsize, int qnc, int bat )
+int fftconv_createOp_filter( fftconvOp_t* Op, size_t* p_auxnb, const cuda_context_t* p_ctx, unsigned int mask, int psize, int pnc, int qsize, int qnc, int bat )
 {
-	unsigned int prc, align, enb, fft_size, o, Sxy, lda, ldb, a, b;
+	unsigned int prc, align, enb, fft_size, axis, Sxy, lda, ldb, radix, a, b;
 	cuda_kernel_t* p_kernel;
 
-	prc=mask&0x3;
+	Op->n_kernels=7;
+	if((Op->p_kernel=(cuda_kernel_t*)malloc(Op->n_kernels*sizeof(cuda_kernel_t)))==0)
+		return ERROR_OUT_OF_MEMORY;
+	if(psize>128) return ERROR_OUT_OF_MAX_SIZE;
+
+	prc=(mask>>1)&0x3;
 	enb=prc?2:4;
 	align=prc?32:16;
 	lda=AFFIS(pnc,align);
 	ldb=AFFIS(qnc,align);
-        align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
-	fft_size=fft_get_exec_size(ds);
-	fft_size=fft_size<16:16:fft_size;
-	o=(fft_size>>4)-1;
+	align=prc?(BASE_PITCH/2):(BASE_PITCH/4);
+	fft_size=fft_get_exec_size(psize);
+	fft_size=fft_size<16?16:fft_size;
+	axis=__bffs(fft_size)-4;
 	Sxy=((fft_size>>1)+1)*fft_size;
+	radix=fft_size<32?8:4;
 
 	{
 		int is_ext=psize!=fft_size;
-		int i=(o<<2)+is_ext;
-		p_kernel=&Op->kfft[0];
+		int i=(axis<<2)+is_ext;
+		int ldr=AFFIS(bat*psize*psize,align);
+		p_kernel=&Op->p_kernel[0];
 		create_fft_kernel_r2c( p_kernel, p_ctx, i, prc );
-		cuda_kernel_sgl( p_kernel, bat, pnc );
-		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(bat*psize*psize,align)>>(1^is_ext) );
-		if(is_ext){
+		if(fft_size>32)
+		{
+			cuda_kernel_sgl( p_kernel, bat, pnc );
+			cuda_kernel_sep_i32( p_kernel, 3, ldr>>(1^is_ext) );
+			if(is_ext){
+				cuda_kernel_sep_i32( p_kernel, 4, psize );
+				cuda_kernel_sep_i32( p_kernel, 5, psize );
+			}
+		}
+		else
+		{
+			int n=bat*pnc;
+			cuda_kernel_sgl( p_kernel, (n+radix-1)/radix, 1 );
+			cuda_kernel_sep_i32( p_kernel, 3, ldr   );
 			cuda_kernel_sep_i32( p_kernel, 4, psize );
-			cuda_kernel_sep_i32( p_kernel, 5, psize );
+			cuda_kernel_sep_i32( p_kernel, 5, psize );			
+			cuda_kernel_sep_i32( p_kernel, 6, bat   );
+			cuda_kernel_sep_i32( p_kernel, 7, n     );
 		}
 	}
 
 	{
-		p_kernel=&Op->kfft[1];
-		create_fft_kernel_r2c( p_kernel, p_ctx, (o<<2)+3, prc );
-		cuda_kernel_sgl( p_kernel, bat, qnc );
-		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(bat*qsize*qsize,align) );
+		int ldr=AFFIS(bat*qsize*qsize,align);
+		p_kernel=&Op->p_kernel[1];
+		create_fft_kernel_r2c( p_kernel, p_ctx, 10*axis+2, prc );
+		cuda_kernel_sep_i32( p_kernel, 3, ldr   );
 		cuda_kernel_sep_i32( p_kernel, 4, qsize );
 		cuda_kernel_sep_i32( p_kernel, 5, qsize );
+		if(fft_size<=32){			
+			int n=bat*qnc;
+			cuda_kernel_sgl( p_kernel, (n+3)>>2, 1 );
+			cuda_kernel_sep_i32( p_kernel, 6, bat );
+			cuda_kernel_sep_i32( p_kernel, 7, n   );
+		} else {
+			cuda_kernel_sgl( p_kernel, bat, qnc );
+		}
 	}
 
 	{
-		int n=psize-qsize+1;
-		p_kernel=&Op->kfft[2];
-		create_fft_kernel_c2r( p_kernel, p_ctx, o*10+9, prc );
-		cuda_kernel_sgl( p_kernel, pnc, qnc );
-		cuda_kernel_sep_i32( p_kernel, 3, AFFIS(pnc*n*n,align) );
-		cuda_kernel_sep_i32( p_kernel, 4, n );
-		cuda_kernel_sep_i32( p_kernel, 5, n );
+		int os=psize-qsize+1;
+		int ldr=AFFIS(pnc*os*os,align);
+		int n=pnc*qnc;
+		p_kernel=&Op->p_kernel[2];
+		create_fft_kernel_c2r( p_kernel, p_ctx, 10*axis+9, prc );
+		cuda_kernel_sep_i32( p_kernel, 3, ldr );
+		cuda_kernel_sep_i32( p_kernel, 4, os  );
+		cuda_kernel_sep_i32( p_kernel, 5, os  );
+		if(fft_size<=32){
+			cuda_kernel_sgl( p_kernel, (n+radix-1)/radix, 1 );
+			cuda_kernel_sep_i32( p_kernel, 6, pnc );
+			cuda_kernel_sep_i32( p_kernel, 7, n   );
+		} else {
+			cuda_kernel_sgl( p_kernel, pnc, qnc );
+		}
 	}
 
 	if(bat>1){
-		perm3d_create_kernel( &Op->kperm[0], p_ctx, prc, 1, Sxy, bat, pnc, Sxy, lda );
-		perm3d_create_kernel( &Op->kperm[1], p_ctx, prc, 1, Sxy, bat, qnc, Sxy, ldb );
-		cgemm_create_kernel( &Op->kcgemm, p_ctx, prc, Sxy, pnc, bat, qnc, lda, ldb, lda );
+		cgemm_create_kernel( &Op->p_kernel[3], p_ctx, prc, Sxy, pnc, bat, qnc, lda, ldb, lda );
+		perm3d_create_kernel( &Op->p_kernel[4], p_ctx, prc, 1, Sxy, bat, pnc, Sxy, lda );
+		perm3d_create_kernel( &Op->p_kernel[6], p_ctx, prc, 1, Sxy, bat, qnc, Sxy, ldb );
 	} else {
-		perm2d_create_kernel( &Op->kperm[0], p_ctx, prc, Sxy, pnc, Sxy, lda );
-		perm2d_create_kernel( &Op->kperm[1], p_ctx, prc, Sxy, qnc, Sxy, ldb );
-		cgevv_create_kernel( &Op->kcgemm, p_ctx, prc, Sxy, pnc, qnc, lda, ldb, lda );
+		cgevv_create_kernel( &Op->p_kernel[3], p_ctx, prc, Sxy, pnc, qnc, lda, ldb, lda );
+		perm2d_create_kernel( &Op->p_kernel[4], p_ctx, prc, Sxy, pnc, Sxy, lda );
+		perm2d_create_kernel( &Op->p_kernel[6], p_ctx, prc, Sxy, qnc, Sxy, ldb );
 	}
-	perm3d_create_kernel( &Op->kperm[2], p_ctx, prc, 2, pnc, qnc, Sxy, lda, Sxy );
-	cuda_kernel_sep_f32( &Op->kcgemm, 3, (float)(1.0/(bat*fft_size*fft_size)) );
+	perm3d_create_kernel( &Op->p_kernel[5], p_ctx, prc, 2, pnc, qnc, Sxy, lda, Sxy );
+	cuda_kernel_sep_f32( &Op->p_kernel[3], 3, (float)(1.0/(bat*fft_size*fft_size)) );
 
 	Sxy*=(prc?4:8);
 	a=bat*(lda+ldb);
@@ -140,35 +234,54 @@ size_t fftconv_createOp_filter( fftconvOp_t* Op, const cuda_context_t* p_ctx, un
 	Op->divpt[0]=Sxy*bat*pnc;
 	Op->divpt[1]=Sxy*bat*lda;
 	Op->divpt[2]=Sxy*(a>b?a:b);
-	return (Op->divpt[2]<<1);
+	*p_auxnb=Op->divpt[2]<<1;
+	return SUCCESS;
 }
-void fftconv( fftconvOp_t* Op, CUdeviceptr d_aux, CUdeviceptr d_target, CUdeviceptr d_source, CUdeviceptr d_filter, CUdeviceptr d_boa, float alpha, float* p_beta, CUstream s )
+void fftconv( fftconvOp_t* Op, CUdeviceptr d_aux, CUdeviceptr d_target, CUdeviceptr d_source, CUdeviceptr d_filter, CUdeviceptr d_bias_or_atv, const float* alpha, CUstream s )
+{
+	if(Op->n_kernels==4)
+	{	
+		CUdeviceptr d_a=d_aux;
+		CUdeviceptr d_b=d_a+Op->divpt[0];
+		CUdeviceptr d_c=d_b+Op->divpt[1];
+		fft2d_r2c( &Op->p_kernel[0], d_a, d_source, s );
+		fft2d_r2c( &Op->p_kernel[1], d_b, d_filter, s );
+		cgemm( &Op->p_kernel[3], d_c, d_a, d_b, 1.f, s );
+		fft2d_c2r( &Op->p_kernel[2], d_target, d_c, d_bias_or_atv, alpha, s );
+	}
+	else
+	{
+		CUdeviceptr d_aa=d_aux;
+		CUdeviceptr d_ba=d_aa+Op->divpt[2];
+		CUdeviceptr d_ab=d_aa+Op->divpt[0];
+		CUdeviceptr d_bb=d_ba+Op->divpt[1];
+		fft2d_r2c( &Op->p_kernel[0], d_aa, d_source, s );
+		fft2d_r2c( &Op->p_kernel[1], d_ab, d_filter, s );
+		permute( &Op->p_kernel[4], d_ba, d_aa, s );
+		permute( &Op->p_kernel[5], d_bb, d_ab, s );
+		cgemm( &Op->p_kernel[3], d_aa, d_ba, d_bb, 1.f, s );
+		permute( &Op->p_kernel[6], d_ba, d_aa, s );
+		fft2d_c2r( &Op->p_kernel[2], d_target, d_ba, d_bias_or_atv, alpha, s );
+	}
+}
+void fftconv_filter( fftconvOp_t* Op, CUdeviceptr d_aux, CUdeviceptr d_z, CUdeviceptr d_x, CUdeviceptr d_y, float ratio, CUstream s )
 {
 	CUdeviceptr d_aa=d_aux;
 	CUdeviceptr d_ba=d_aa+Op->divpt[2];
 	CUdeviceptr d_ab=d_aa+Op->divpt[0];
 	CUdeviceptr d_bb=d_ba+Op->divpt[1];
-	fft2d( &Op->kfft[0], d_aa, d_source, s );
-	fft2d( &Op->kfft[1], d_ab, d_filter, s );
-	permute( &Op->kperm[0], d_ba, d_aa, s );
-	permute( &Op->kperm[1], d_bb, d_ab, s );
-	cgemm( &Op->kcgemm, d_aa, d_ba, d_bb, alpha, s );
-	permute( &Op->kperm[2], d_ba, d_aa, s );
-	if(d_boa!=0){ cuda_kernel_sep_ptr( &Op->kfft[2], 3, d_boa ); }
-	if(p_beta!=NULL){ cuda_kernel_sep_f32( &Op->kfft[2], 6+(d_boa!=0), *p_beta ); }
-	fft2d( &Op->kfft[2], d_target, d_ba, s );
+	fft2d_r2c( &Op->p_kernel[0], d_aa, d_x, s );
+	fft2d_r2c( &Op->p_kernel[1], d_ab, d_y, s );
+	permute( &Op->p_kernel[4], d_ba, d_aa, s );
+	permute( &Op->p_kernel[5], d_bb, d_ab, s );
+	cgemm( &Op->p_kernel[3], d_aa, d_ba, d_bb, 1.f, s );
+	permute( &Op->p_kernel[6], d_ba, d_aa, s );
+	fft2d_c2r( &Op->p_kernel[2], d_z, d_ba, 0, &ratio, s );
 }
-void fftconv_filter( fftconvOp_t* Op, CUdeviceptr d_aux, CUdeviceptr d_z, CUdeviceptr d_x, CUdeviceptr d_y, float alpha, CUstream s )
+void fftconv_releaseOp( fftconvOp_t* Op )
 {
-	CUdeviceptr d_aa=d_aux;
-	CUdeviceptr d_ba=d_aa+Op->divpt[2];
-	CUdeviceptr d_ab=d_aa+Op->divpt[0];
-	CUdeviceptr d_bb=d_ba+Op->divpt[1];
-	fft2d( &Op->kfft[0], d_aa, d_x, s );
-	fft2d( &Op->kfft[1], d_ab, d_y, s );
-	permute( &Op->kperm[0], d_ba, d_aa, s );
-	permute( &Op->kperm[1], d_bb, d_ab, s );
-	cgemm( &Op->kcgemm, d_aa, d_ba, d_bb, alpha, s );
-	permute( &Op->kperm[2], d_ba, d_aa, s );
-	fft2d( &Op->kfft[2], d_z, d_ba, s );
+	if(Op->p_kernel!=NULL){
+		free(Op->p_kernel);
+		Op->p_kernel=NULL;
+	}
 }
