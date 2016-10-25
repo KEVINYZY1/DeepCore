@@ -6,7 +6,7 @@ void gemm_create_kernel( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, i
 	{
 		{ "d_sgemm_128x32", "d_sgemm_128x32_bc", "d_sgemm_128x64", "d_sgemm_128x64_bc", "d_sgemm_128x128", "d_sgemm_128x128_bc" },
 		{ "d_xgemm_128x32", "d_xgemm_128x32_bc", "d_xgemm_128x64", "d_xgemm_128x64_bc", "d_xgemm_128x128", "d_xgemm_128x128_bc" },
-		{ "d_hgemm_128x32", "d_hgemm_128x32_bc", "d_hgemm_128x64", "d_hgemm_128x64_bc", "d_hgemm_128x128", "d_hgemm_128x128_bc" }
+		{ "d_hgemm_256x32", "d_hgemm_256x32_bc", "d_hgemm_256x64", "d_hgemm_256x64_bc", "d_hgemm_256x128", "d_hgemm_256x128_bc" }
 	};
 	static const unsigned char size[]={127,127,255};
 	int i=(cnc>32)+(((cnc&127)==0)|((cnc&127)>64));
@@ -24,7 +24,7 @@ void gemm_create_kernel( cuda_kernel_t* p_kernel, const cuda_context_t* p_ctx, i
 }
 void gemv_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc, int nx, int ny, int lda )
 {
-	const char* knames[][2]={{"d_sgemv", "d_sgemv_bc"},{"d_xgemv", "d_xgemv_bc"}};
+	const char* knames[][2]={{"d_sgemv", "d_sgemv_bc"},{"d_xgemv", "d_xgemv_bc"},{"d_hgemv", "d_hgemv_bc"}};
 	unsigned int i=((nx&127)|(ny&31))!=0;
 	unsigned int s=prc!=0;
 	cuda_context_create_kernel( p, p_ctx, knames[prc][i] );
