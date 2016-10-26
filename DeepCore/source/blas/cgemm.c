@@ -80,7 +80,7 @@ void cgemm_flat_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, in
 		"d_scgemm_flat_16_0064"
 	};	
 	static const unsigned char block_size[]={
-		 63, 63,255,255,255,255,255,
+		 63, 63,127,255,255,255,255,
 		127,127,255,255,255,255,
 		 63,127,255,255,255,
 		127,127,255,255,
@@ -96,7 +96,7 @@ void cgemm_flat_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, in
 	cuda_context_create_kernel( p, p_ctx, knames[k] );
 	cuda_kernel_sao( p, AM_3P_6S );
 	cuda_kernel_sbl( p, block_size[k]+1, 1 );
-	cuda_kernel_sgl( p, slice_size>>4, (onc+r-1)/r );
+	cuda_kernel_sgl( p, slice_size>>4, onc>r?((onc+r-1)/r):1 );
 	cuda_kernel_sep_f32( p, 3, 1.f              );
 	cuda_kernel_sep_i32( p, 4, slice_size       );
 	cuda_kernel_sep_i32( p, 5, inc              );
