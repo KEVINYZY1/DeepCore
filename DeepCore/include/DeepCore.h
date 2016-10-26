@@ -24,18 +24,18 @@
 #define dcMaskPrecisionMixed              0x2
 #define dcMaskPrecisionHalf               0x6
 
-#define dcMaskTensorTypeFilter            0x4
-#define dcMaskTensorTypeBias              0x5
-#define dcMaskTensorTypeFullConnection    0x6
+#define dcMaskTensorTypeFilter            0x20
+#define dcMaskTensorTypeBias              0x21
+#define dcMaskTensorTypeFullConnection    0x22
 
-#define dcMaskConvFused					  0x8
+#define dcMaskConvFused                   0x08
 #define dcMaskConvFilter                  0x10
 
 #define	dcMaskActivationRelu              0x10
 #define	dcMaskActivationElu               0x11
 
-#define dcMaskPoolingAvg                  0x0
-#define dcMaskPoolingMax                  0x4
+#define dcMaskPoolingAvg                  0x00
+#define dcMaskPoolingMax                  0x40
 
 #ifdef __cplusplus
 extern "C"
