@@ -21,10 +21,10 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 	int prc, enb, add_bias, atvop, os, anr, bnr, cnr, lda, ldb, ldc;
 	cuda_kernel_t* p_kernel=&Op->kernel;
 
-	prc=mask&0x3;
+	prc=(mask>>1)&0x3;
 	enb=prc?2:4;
-	add_bias=(mask>>2)&0x1;
-	atvop=(mask>>3)+1;
+	add_bias=(mask>>3)&0x1;
+	atvop=mask>>4;
 	os=(ds-fs)/st+1;
 	anr=bat*ds*ds;
 	bnr=inc*fs*fs;
@@ -33,10 +33,10 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 	ldb=AFFIS(bnr*enb,BASE_PITCH);
 	ldc=AFFIS(cnr*enb,BASE_PITCH);
 	Op->d_slider=0;
-	Op->flag=0;
+	Op->d_slider_cmem=0;
 	if(fs>1)
 	{
-		int pn, vs, i, k, s, tile_y;
+		int pn, vs, i, k, s, tile_y, use_cmem;
 		static const char* knames[]=
 		{ 
 			"d_sconv_128x32"        , "d_sconv_128x32_relu"        , "d_sconv_128x32_elu"        , "d_sconv_128x32_bias"        , "d_sconv_128x32_bias_relu"        , "d_sconv_128x32_bias_elu"        ,
@@ -49,30 +49,30 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 			"d_sconv_128x128_ldc_bc", "d_sconv_128x128_relu_ldc_bc", "d_sconv_128x128_elu_ldc_bc", "d_sconv_128x128_bias_ldc_bc", "d_sconv_128x128_bias_relu_ldc_bc", "d_sconv_128x128_bias_elu_ldc_bc"
 		};
 		i=(onc>32)+(((onc&127)==0)|((onc&127)>64));
-		Op->flag=(p_ctx->arch>=50)&((bnr*4)<=(p_ctx->cmemnb-128))&(i==2);
+		use_cmem=(p_ctx->arch>=50)&((bnr*4)<=(p_ctx->cmemnb-128))&(i==2);
 		pn=AFFIS(bnr,8);
-		if(Op->flag){
-			cuModuleGetGlobal( &Op->d_slider, NULL, p_ctx->module, "c_slider" );
-		} else {
-			if(cuMemAlloc( &Op->d_slider, sizeof(int)*pn )!=CUDA_SUCCESS)
-				return ERROR_OUT_OF_DEVICE_MEMORY;
+		Op->slider_size=pn*sizeof(int);			
+		if(cuMemAlloc( &Op->d_slider, Op->slider_size )!=CUDA_SUCCESS)
+			return ERROR_OUT_OF_DEVICE_MEMORY;
+		if(use_cmem){
+			cuModuleGetGlobal( &Op->d_slider_cmem, NULL, p_ctx->module, "c_slider" );
 		}
 		__generate_slider( p_temp, anr*enb, lda, bnr, pn, ds, fs, inc, st, enb );
-		cuMemcpyHtoD( Op->d_slider, p_temp, sizeof(int)*pn );
+		cuMemcpyHtoD( Op->d_slider, p_temp, Op->slider_size );
 		s=5+i;
 		tile_y=1<<s;
 		vs=AFFIS(cnr,2);
-		i+=Op->flag;
+		i+=use_cmem;
 		k=12*i+6*((onc&(tile_y-1))!=0)+3*add_bias+atvop;
 		i=k%6;
 		cuda_context_create_kernel( p_kernel, p_ctx, knames[k] );
 		cuda_kernel_sao( p_kernel, k<36?(i<3?AM_4P_AS:AM_5P_AS):(i<3?AM_3P_AS:AM_4P_AS) );
 		cuda_kernel_sbl( p_kernel, k<24?128:256, 1 );
-		cuda_kernel_sgl( p_kernel, (vs+127)>>7, (onc+tile_y-1)>>s );
-		if(Op->flag==0){
+		cuda_kernel_sgl( p_kernel, (vs+127)>>7, (onc+tile_y-1)>>s, 1 );
+		if(use_cmem==0){
 			cuda_kernel_sep_ptr( p_kernel, 3, Op->d_slider );
 		}
-		i=(Op->flag==0)+add_bias;
+		i=(use_cmem==0)+add_bias;
 		cuda_kernel_sep_i32( p_kernel, 4+i, ldc );
 		cuda_kernel_sep_i32( p_kernel, 5+i, ldb );
 		cuda_kernel_sep_i32( p_kernel, 6+i, os  );
@@ -87,24 +87,28 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 	}
 	return SUCCESS;
 }
-void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUdeviceptr d_bias, float alpha, CUstream s )
+void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUdeviceptr d_bias, const float* alpha, CUstream s )
 {
 	cuda_kernel_t* p=&Op->kernel;
-	int b0=(Op->flag==0)&(Op->d_slider!=0);
+	int b0=(Op->d_slider_cmem==0)&(Op->d_slider!=0);
 	int b1=d_bias!=0;
+	if(Op->d_slider_cmem!=0){
+		cuMemcpyDtoDAsync( Op->d_slider_cmem, Op->d_slider, Op->slider_size, s );
+	}
 	cuda_kernel_sep_ptr( p, 0, d_c );
 	cuda_kernel_sep_ptr( p, 1, d_a );
 	cuda_kernel_sep_ptr( p, 2, d_b );
 	if(b1){
 		cuda_kernel_sep_ptr( p, 3+b0, d_bias );
 	}
-	cuda_kernel_sep_f32( p, 3+b0+b1, alpha );
+	cuda_kernel_sep_f32( p, 3+b0+b1, alpha!=NULL?*alpha:1.f );
 	cuda_kernel_launch( p, s );
 }
 void conv_releaseOp( convOp_t* Op )
 {
-	if((Op->flag==0)&(Op->d_slider!=0)){
+	if(Op->d_slider!=0){
 	    cuMemFree(Op->d_slider);
 	    Op->d_slider=0;
+		Op->d_slider_cmem=0;
 	}
 }
