@@ -37,7 +37,7 @@ void cgemm_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc
 	cuda_context_create_kernel( p, p_ctx, knames[prc][y][x] );
 	cuda_kernel_sao( p, y<3?AM_3P_7S:AM_3P_8S );
 	cuda_kernel_sbl( p, block_size[y]+1, 1 );
-	cuda_kernel_sgl( p, gdx, gdy );
+	cuda_kernel_sgl( p, gdx, gdy, 1 );
 	cuda_kernel_sep_f32( p, 3, 1.f );
 	if(y==3){
 		cuda_kernel_sep_i32( p, 4, nbx );
@@ -77,26 +77,34 @@ void cgemm_flat_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, in
 		"d_scgemm_flat_08_0128",
 		"d_scgemm_flat_16_0016",
 		"d_scgemm_flat_16_0032",
-		"d_scgemm_flat_16_0064"
+		"d_scgemm_flat_16_0064",
+		"d_scgemm_flat_large"
 	};	
 	static const unsigned char block_size[]={
 		 63, 63,127,255,255,255,255,
 		127,127,255,255,255,255,
 		 63,127,255,255,255,
 		127,127,255,255,
-		255,255,255
+		255,255,255,
+		255
 	};
-	static const short radix[]={1024,512,256,128,64};
-	static const unsigned char ofs[]={0,7,13,18,22};
-	int axis=__bffs(bat);
+	static const short radix[]={1024,512,256,128,64,128};
+	static const unsigned char ofs[]={0,7,13,18,22,25};
+	int axis=__bffs(bat>=32?32:bat);
 	int i=ofs[axis];
 	int r=radix[axis];
 	int k=i+__bffs(fft_get_exec_size(onc>r?r:onc))-4;
 	int n=slice_size*(dir?onc:inc);
+	int n_tiles=slice_size>>4;
+	int d=onc>r?((onc+r-1)/r):1;
 	cuda_context_create_kernel( p, p_ctx, knames[k] );
 	cuda_kernel_sao( p, AM_3P_6S );
 	cuda_kernel_sbl( p, block_size[k]+1, 1 );
-	cuda_kernel_sgl( p, slice_size>>4, onc>r?((onc+r-1)/r):1 );
+	if(bat<32){
+		cuda_kernel_sgl( p, n_tiles, d, 1 );
+	} else {
+		cuda_kernel_sgl( p, bat>>3, n_tiles, d );
+	}
 	cuda_kernel_sep_f32( p, 3, 1.f              );
 	cuda_kernel_sep_i32( p, 4, slice_size       );
 	cuda_kernel_sep_i32( p, 5, inc              );
@@ -115,7 +123,7 @@ void cgemv_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc
 	int i=((nr&127)|(nc&15))!=0;
 	cuda_context_create_kernel( p, p_ctx, knames[prc][i] );
 	cuda_kernel_sao( p, AM_3P_6S );
-	cuda_kernel_sgl( p, (nr+127)>>7, bat );
+	cuda_kernel_sgl( p, (nr+127)>>7, bat, 1 );
 	cuda_kernel_sbl( p, 128, 1 );
 	cuda_kernel_sep_f32( p, 3, 1.f );
 	cuda_kernel_sep_i32( p, 4, nr  );
@@ -144,7 +152,7 @@ void cgevv_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc
 	}
 	cuda_context_create_kernel( p, p_ctx, knames[prc][i] );
 	cuda_kernel_sao( p, AM_3P_6S );
-	cuda_kernel_sgl( p, gdx, gdy );
+	cuda_kernel_sgl( p, gdx, gdy, 1 );
 	cuda_kernel_sbl( p, bdx, bdy );
 	if(i<2){
 		cuda_kernel_set_smemnb( p, nb*bdy*enb );
