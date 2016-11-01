@@ -39,17 +39,13 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 		int pn, vs, i, k, s, tile_y, use_cmem;
 		static const char* knames[]=
 		{ 
-			"d_sconv_128x32"        , "d_sconv_128x32_relu"        , "d_sconv_128x32_elu"        , "d_sconv_128x32_bias"        , "d_sconv_128x32_bias_relu"        , "d_sconv_128x32_bias_elu"        ,
-			"d_sconv_128x32_bc"     , "d_sconv_128x32_relu_bc"     , "d_sconv_128x32_elu_bc"     , "d_sconv_128x32_bias_bc"     , "d_sconv_128x32_bias_relu_bc"     , "d_sconv_128x32_bias_elu_bc"     ,
-			"d_sconv_128x64"        , "d_sconv_128x64_relu"        , "d_sconv_128x64_elu"        , "d_sconv_128x64_bias"        , "d_sconv_128x64_bias_relu"        , "d_sconv_128x64_bias_elu"        ,
-			"d_sconv_128x64_bc"     , "d_sconv_128x64_relu_bc"     , "d_sconv_128x64_elu_bc"     , "d_sconv_128x64_bias_bc"     , "d_sconv_128x64_bias_relu_bc"     , "d_sconv_128x64_bias_elu_bc"     ,
-			"d_sconv_128x128"       , "d_sconv_128x128_relu"       , "d_sconv_128x128_elu"       , "d_sconv_128x128_bias"       , "d_sconv_128x128_bias_relu"       , "d_sconv_128x128_bias_elu"       ,
-			"d_sconv_128x128_bc"    , "d_sconv_128x128_relu_bc"    , "d_sconv_128x128_elu_bc"    , "d_sconv_128x128_bias_bc"    , "d_sconv_128x128_bias_relu_bc"    , "d_sconv_128x128_bias_elu_bc"    ,
-			"d_sconv_128x128_ldc"   , "d_sconv_128x128_relu_ldc"   , "d_sconv_128x128_elu_ldc"   , "d_sconv_128x128_bias_ldc"   , "d_sconv_128x128_bias_relu_ldc"   , "d_sconv_128x128_bias_elu_ldc"   ,
-			"d_sconv_128x128_ldc_bc", "d_sconv_128x128_relu_ldc_bc", "d_sconv_128x128_elu_ldc_bc", "d_sconv_128x128_bias_ldc_bc", "d_sconv_128x128_bias_relu_ldc_bc", "d_sconv_128x128_bias_elu_ldc_bc"
+			"d_sconv_128x32"     , "d_sconv_128x32_relu"     , "d_sconv_128x32_elu"     , "d_sconv_128x32_bias"     , "d_sconv_128x32_bias_relu"     , "d_sconv_128x32_bias_elu"     ,
+			"d_sconv_128x64"     , "d_sconv_128x64_relu"     , "d_sconv_128x64_elu"     , "d_sconv_128x64_bias"     , "d_sconv_128x64_bias_relu"     , "d_sconv_128x64_bias_elu"     ,
+			"d_sconv_128x128"    , "d_sconv_128x128_relu"    , "d_sconv_128x128_elu"    , "d_sconv_128x128_bias"    , "d_sconv_128x128_bias_relu"    , "d_sconv_128x128_bias_elu"    ,
+			"d_sconv_128x128_ldc", "d_sconv_128x128_relu_ldc", "d_sconv_128x128_elu_ldc", "d_sconv_128x128_bias_ldc", "d_sconv_128x128_bias_relu_ldc", "d_sconv_128x128_bias_elu_ldc"
 		};
 		i=(onc>32)+(((onc&127)==0)|((onc&127)>64));
-		use_cmem=(p_ctx->arch>=50)&((bnr*4)<=(p_ctx->cmemnb-128))&(i==2);
+		use_cmem=((bnr*4)<=p_ctx->cmemnb)&(i==2);
 		pn=AFFIS(bnr,8);
 		Op->slider_size=pn*sizeof(int);			
 		if(cuMemAlloc( &Op->d_slider, Op->slider_size )!=CUDA_SUCCESS)
@@ -63,11 +59,11 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 		tile_y=1<<s;
 		vs=AFFIS(cnr,2);
 		i+=use_cmem;
-		k=12*i+6*((onc&(tile_y-1))!=0)+3*add_bias+atvop;
+		k=6*i+3*add_bias+atvop;
 		i=k%6;
 		cuda_context_create_kernel( p_kernel, p_ctx, knames[k] );
-		cuda_kernel_sao( p_kernel, k<36?(i<3?AM_4P_AS:AM_5P_AS):(i<3?AM_3P_AS:AM_4P_AS) );
-		cuda_kernel_sbl( p_kernel, k<24?128:256, 1 );
+		cuda_kernel_sao( p_kernel, k<18?(i<3?AM_4P_AS:AM_5P_AS):(i<3?AM_3P_AS:AM_4P_AS) );
+		cuda_kernel_sbl( p_kernel, k<12?128:256, 1 );
 		cuda_kernel_sgl( p_kernel, (vs+127)>>7, (onc+tile_y-1)>>s, 1 );
 		if(use_cmem==0){
 			cuda_kernel_sep_ptr( p_kernel, 3, Op->d_slider );
