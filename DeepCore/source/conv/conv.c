@@ -44,8 +44,12 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 			"d_sconv_128x128"    , "d_sconv_128x128_relu"    , "d_sconv_128x128_elu"    , "d_sconv_128x128_bias"    , "d_sconv_128x128_bias_relu"    , "d_sconv_128x128_bias_elu"    ,
 			"d_sconv_128x128_ldc", "d_sconv_128x128_relu_ldc", "d_sconv_128x128_elu_ldc", "d_sconv_128x128_bias_ldc", "d_sconv_128x128_bias_relu_ldc", "d_sconv_128x128_bias_elu_ldc"
 		};
-		i=(onc>32)+(((onc&127)==0)|((onc&127)>64));
-		use_cmem=((bnr*4)<=p_ctx->cmemnb)&(i==2);
+		if((onc<=32)|((onc>64)&(onc<=96))){
+			i=0;
+		} else {
+			i=1+(((onc&127)==0)|((onc&127)>64));
+		}
+		use_cmem=((bnr<<2)<=p_ctx->cmemnb)&(i==2);
 		pn=AFFIS(bnr,8);
 		Op->slider_size=pn*sizeof(int);			
 		if(cuMemAlloc( &Op->d_slider, Op->slider_size )!=CUDA_SUCCESS)
