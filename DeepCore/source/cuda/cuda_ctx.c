@@ -108,7 +108,7 @@ int cuda_context_create( cuda_context_t* p_ctx, char* p_temp )
 	}
 	cuMemcpyHtoD( p_ctx->d_global, p_temp, g_fftRF_ofs[n]*sizeof(float2) );
 	cuDeviceGetAttribute( &p_ctx->n_sm                , CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT       , p_ctx->dev );
-	cuDeviceGetAttribute( &p_ctx->cmemnb			  , CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY	   , p_ctx->dev );
+	cuDeviceGetAttribute( &p_ctx->cmemnb	          , CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY	   , p_ctx->dev );
 	cuDeviceGetAttribute( &p_ctx->max_nbx             , CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X             , p_ctx->dev );
 	cuDeviceGetAttribute( &p_ctx->max_nby             , CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y             , p_ctx->dev );
 	cuDeviceGetAttribute( &p_ctx->max_block_size      , CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X            , p_ctx->dev );
