@@ -15,12 +15,17 @@ static void __generate_slider( unsigned int* p_slider, int m, int pm, int n, int
 		for( i=inc*pm-(m<pm)*enb, pn-=n; pn>0; --pn ){ *p_slider=i; ++p_slider; }
 	}
 }
-
 int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_ctx, unsigned int mask, int ds, int fs, int bat, int inc, int onc, int st )
 {
-	int prc, enb, add_bias, atvop, os, anr, bnr, cnr, lda, ldb, ldc;
+	int prc, enb, pn, vs, i, k, s, tile_y, use_cmem, add_bias, atvop, os, anr, bnr, cnr, lda, ldb, ldc;		
+	static const char* knames[]=
+	{ 
+			"d_sconv_128x32"     , "d_sconv_128x32_relu"     , "d_sconv_128x32_elu"     , "d_sconv_128x32_bias"     , "d_sconv_128x32_bias_relu"     , "d_sconv_128x32_bias_elu"     ,
+			"d_sconv_128x64"     , "d_sconv_128x64_relu"     , "d_sconv_128x64_elu"     , "d_sconv_128x64_bias"     , "d_sconv_128x64_bias_relu"     , "d_sconv_128x64_bias_elu"     ,
+			"d_sconv_128x128"    , "d_sconv_128x128_relu"    , "d_sconv_128x128_elu"    , "d_sconv_128x128_bias"    , "d_sconv_128x128_bias_relu"    , "d_sconv_128x128_bias_elu"    ,
+			"d_sconv_128x128_ldc", "d_sconv_128x128_relu_ldc", "d_sconv_128x128_elu_ldc", "d_sconv_128x128_bias_ldc", "d_sconv_128x128_bias_relu_ldc", "d_sconv_128x128_bias_elu_ldc"
+	};
 	cuda_kernel_t* p_kernel=&Op->kernel;
-
 	prc=(mask>>1)&0x3;
 	enb=prc?2:4;
 	add_bias=(mask>>3)&0x1;
@@ -34,57 +39,44 @@ int conv_createOp( convOp_t* Op, unsigned int* p_temp, const cuda_context_t* p_c
 	ldc=AFFIS(cnr*enb,BASE_PITCH);
 	Op->d_slider=0;
 	Op->d_slider_cmem=0;
-	if(fs>1)
-	{
-		int pn, vs, i, k, s, tile_y, use_cmem;
-		static const char* knames[]=
-		{ 
-			"d_sconv_128x32"     , "d_sconv_128x32_relu"     , "d_sconv_128x32_elu"     , "d_sconv_128x32_bias"     , "d_sconv_128x32_bias_relu"     , "d_sconv_128x32_bias_elu"     ,
-			"d_sconv_128x64"     , "d_sconv_128x64_relu"     , "d_sconv_128x64_elu"     , "d_sconv_128x64_bias"     , "d_sconv_128x64_bias_relu"     , "d_sconv_128x64_bias_elu"     ,
-			"d_sconv_128x128"    , "d_sconv_128x128_relu"    , "d_sconv_128x128_elu"    , "d_sconv_128x128_bias"    , "d_sconv_128x128_bias_relu"    , "d_sconv_128x128_bias_elu"    ,
-			"d_sconv_128x128_ldc", "d_sconv_128x128_relu_ldc", "d_sconv_128x128_elu_ldc", "d_sconv_128x128_bias_ldc", "d_sconv_128x128_bias_relu_ldc", "d_sconv_128x128_bias_elu_ldc"
-		};
-		if((onc<=32)|((onc>64)&(onc<=96))){
-			i=0;
-		} else {
-			i=1+(((onc&127)==0)|((onc&127)>64));
-		}
-		use_cmem=((bnr<<2)<=p_ctx->cmemnb)&(i==2);
-		pn=AFFIS(bnr,8);
-		Op->slider_size=pn*sizeof(int);			
-		if(cuMemAlloc( &Op->d_slider, Op->slider_size )!=CUDA_SUCCESS)
-			return ERROR_OUT_OF_DEVICE_MEMORY;
-		if(use_cmem){
-			cuModuleGetGlobal( &Op->d_slider_cmem, NULL, p_ctx->module, "c_slider" );
-		}
-		__generate_slider( p_temp, anr*enb, lda, bnr, pn, ds, fs, inc, st, enb );
-		cuMemcpyHtoD( Op->d_slider, p_temp, Op->slider_size );
-		s=5+i;
-		tile_y=1<<s;
-		vs=AFFIS(cnr,2);
-		i+=use_cmem;
-		k=6*i+3*add_bias+atvop;
-		i=k%6;
-		cuda_context_create_kernel( p_kernel, p_ctx, knames[k] );
-		cuda_kernel_sao( p_kernel, k<18?(i<3?AM_4P_AS:AM_5P_AS):(i<3?AM_3P_AS:AM_4P_AS) );
-		cuda_kernel_sbl( p_kernel, k<12?128:256, 1 );
-		cuda_kernel_sgl( p_kernel, (vs+127)>>7, (onc+tile_y-1)>>s, 1 );
-		if(use_cmem==0){
-			cuda_kernel_sep_ptr( p_kernel, 3, Op->d_slider );
-		}
-		i=(use_cmem==0)+add_bias;
-		cuda_kernel_sep_i32( p_kernel, 4+i, ldc );
-		cuda_kernel_sep_i32( p_kernel, 5+i, ldb );
-		cuda_kernel_sep_i32( p_kernel, 6+i, os  );
-		cuda_kernel_sep_i32( p_kernel, 7+i, os  );
-		cuda_kernel_sep_i32( p_kernel, 8+i, ds  );
-		cuda_kernel_sep_i32( p_kernel, 9+i, ds  );
-		cuda_kernel_sep_i32( p_kernel,10+i, pn  );
-		cuda_kernel_sep_i32( p_kernel,11+i, vs  );
-		cuda_kernel_sep_i32( p_kernel,12+i, onc );
+	if((onc<=32)|((onc>64)&(onc<=96))){
+		i=0;
 	} else {
-		gemm_create_kernel( p_kernel, p_ctx, prc, anr, bnr, onc, lda, ldb, ldc );
+		i=1+(((onc&127)==0)|((onc&127)>64));
 	}
+	use_cmem=((bnr<<2)<=p_ctx->cmemnb)&(i==2);
+	pn=AFFIS(bnr,8);
+	Op->slider_size=pn*sizeof(int);			
+	if(cuMemAlloc( &Op->d_slider, Op->slider_size )!=CUDA_SUCCESS)
+		return ERROR_OUT_OF_DEVICE_MEMORY;
+	if(use_cmem){
+		cuModuleGetGlobal( &Op->d_slider_cmem, NULL, p_ctx->module, "c_slider" );
+	}
+	__generate_slider( p_temp, anr*enb, lda, bnr, pn, ds, fs, inc, st, enb );
+	cuMemcpyHtoD( Op->d_slider, p_temp, Op->slider_size );
+	s=5+i;
+	tile_y=1<<s;
+	vs=AFFIS(cnr,2);
+	i+=use_cmem;
+	k=6*i+3*add_bias+atvop;
+	i=k%6;
+	cuda_context_create_kernel( p_kernel, p_ctx, knames[k] );
+	cuda_kernel_sao( p_kernel, k<18?(i<3?AM_4P_AS:AM_5P_AS):(i<3?AM_3P_AS:AM_4P_AS) );
+	cuda_kernel_sbl( p_kernel, k<12?128:256, 1 );
+	cuda_kernel_sgl( p_kernel, (vs+127)>>7, (onc+tile_y-1)>>s, 1 );
+	if(use_cmem==0){
+		cuda_kernel_sep_ptr( p_kernel, 3, Op->d_slider );
+	}
+	i=(use_cmem==0)+add_bias;
+	cuda_kernel_sep_i32( p_kernel, 4+i, ldc );
+	cuda_kernel_sep_i32( p_kernel, 5+i, ldb );
+	cuda_kernel_sep_i32( p_kernel, 6+i, os  );
+	cuda_kernel_sep_i32( p_kernel, 7+i, os  );
+	cuda_kernel_sep_i32( p_kernel, 8+i, ds  );
+	cuda_kernel_sep_i32( p_kernel, 9+i, ds  );
+	cuda_kernel_sep_i32( p_kernel,10+i, pn  );
+	cuda_kernel_sep_i32( p_kernel,11+i, vs  );
+	cuda_kernel_sep_i32( p_kernel,12+i, onc );
 	return SUCCESS;
 }
 void conv( convOp_t* Op, CUdeviceptr d_c, CUdeviceptr d_a, CUdeviceptr d_b, CUdeviceptr d_bias, const float* alpha, CUstream s )

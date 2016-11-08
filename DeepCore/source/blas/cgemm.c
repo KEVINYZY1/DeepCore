@@ -3,20 +3,12 @@
 
 void cgemm_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc, int bat, int anr, int bnr, int cnc, int lda, int ldb, int ldc )
 {
-	static const char* knames[3][4][5]=
+	static const char* knames[4][5]=
 	{
-		{
-			{"d_scgemmBatched_32x32", "d_scgemmBatched_32x32_abc", "d_scgemmBatched_32x32_cbc", "d_scgemmBatched_32x32_acbc", "d_scgemmBatched_32x32_abcbc"},
-			{"d_scgemmBatched_32x64", "d_scgemmBatched_32x64_abc", "d_scgemmBatched_32x64_cbc", "d_scgemmBatched_32x64_acbc", "d_scgemmBatched_32x64_abcbc"},
-			{"d_scgemmBatched_64x32", "d_scgemmBatched_64x32_abc", "d_scgemmBatched_64x32_cbc", "d_scgemmBatched_64x32_acbc", "d_scgemmBatched_64x32_abcbc"},
-			{"d_scgemmBatched_64x64", "d_scgemmBatched_64x64_abc", "d_scgemmBatched_64x64_cbc", "d_scgemmBatched_64x64_acbc", "d_scgemmBatched_64x64_abcbc"}
-		},							  							   							    							  
-		{							  							   							    							  
-			{"d_xcgemmBatched_32x32", "d_xcgemmBatched_32x32_abc", "d_xcgemmBatched_32x32_cbc", "d_xcgemmBatched_32x32_acbc", "d_xcgemmBatched_32x32_abcbc"},
-			{"d_xcgemmBatched_32x64", "d_xcgemmBatched_32x64_abc", "d_xcgemmBatched_32x64_cbc", "d_xcgemmBatched_32x64_acbc", "d_xcgemmBatched_32x64_abcbc"},
-			{"d_xcgemmBatched_64x32", "d_xcgemmBatched_64x32_abc", "d_xcgemmBatched_64x32_cbc", "d_xcgemmBatched_64x32_acbc", "d_xcgemmBatched_64x32_abcbc"},
-			{"d_xcgemmBatched_64x64", "d_xcgemmBatched_64x64_abc", "d_xcgemmBatched_64x64_cbc", "d_xcgemmBatched_64x64_acbc", "d_xcgemmBatched_64x64_abcbc"}
-		}						  							   							    							 
+		{"d_scgemmBatched_32x32", "d_scgemmBatched_32x32_abc", "d_scgemmBatched_32x32_cbc", "d_scgemmBatched_32x32_acbc", "d_scgemmBatched_32x32_abcbc"},
+		{"d_scgemmBatched_32x64", "d_scgemmBatched_32x64_abc", "d_scgemmBatched_32x64_cbc", "d_scgemmBatched_32x64_acbc", "d_scgemmBatched_32x64_abcbc"},
+		{"d_scgemmBatched_64x32", "d_scgemmBatched_64x32_abc", "d_scgemmBatched_64x32_cbc", "d_scgemmBatched_64x32_acbc", "d_scgemmBatched_64x32_abcbc"},
+		{"d_scgemmBatched_64x64", "d_scgemmBatched_64x64_abc", "d_scgemmBatched_64x64_cbc", "d_scgemmBatched_64x64_acbc", "d_scgemmBatched_64x64_abcbc"}
 	};
 	static const unsigned char block_size[]={63,127,127,255};
 	static const unsigned char dx[]={32,32,64,64};
@@ -34,7 +26,7 @@ void cgemm_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc
 	unsigned int i=4+(y==3);
 	lda>>=shfl_a[prc][x];
 	ldb>>=shfl_b[prc][x];
-	cuda_context_create_kernel( p, p_ctx, knames[prc][y][x] );
+	cuda_context_create_kernel( p, p_ctx, knames[y][x] );
 	cuda_kernel_sao( p, y<3?AM_3P_7S:AM_3P_8S );
 	cuda_kernel_sbl( p, block_size[y]+1, 1 );
 	cuda_kernel_sgl( p, gdx, gdy, 1 );
@@ -78,7 +70,9 @@ void cgemm_flat_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, in
 		"d_scgemm_flat_16_0016",
 		"d_scgemm_flat_16_0032",
 		"d_scgemm_flat_16_0064",
-		"d_scgemm_flat_large"
+		"d_scgemm_flat_lb_0032",
+		"d_scgemm_flat_lb_0064",
+		"d_scgemm_flat_lb_0128"
 	};	
 	static const unsigned char block_size[]={
 		 63, 63,127,255,255,255,255,
@@ -86,24 +80,26 @@ void cgemm_flat_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, in
 		 63,127,255,255,255,
 		127,127,255,255,
 		255,255,255,
-		255
+		255,255,255
 	};
-	static const short radix[]={1024,512,256,128,64,128};
+	static const short nmax[]={1024,512,256,128,64,128};
 	static const unsigned char ofs[]={0,7,13,18,22,25};
 	int axis=__bffs(bat>=32?32:bat);
 	int i=ofs[axis];
-	int r=radix[axis];
-	int k=i+__bffs(fft_get_exec_size(onc>r?r:onc))-4;
+	int m=nmax[axis];
+	int r=__bffs(fft_get_exec_size(onc>m?m:onc))-4-(bat>16);
+	int k=i+r;
 	int n=slice_size*(dir?onc:inc);
 	int n_tiles=slice_size>>4;
-	int d=onc>r?((onc+r-1)/r):1;
+	int tile=1<<(4+r+(bat>16));
+	int d=onc>tile?((onc+tile-1)/tile):1;
 	cuda_context_create_kernel( p, p_ctx, knames[k] );
 	cuda_kernel_sao( p, AM_3P_6S );
 	cuda_kernel_sbl( p, block_size[k]+1, 1 );
 	if(bat<32){
 		cuda_kernel_sgl( p, n_tiles, d, 1 );
 	} else {
-		cuda_kernel_sgl( p, bat>>3, n_tiles, d );
+		cuda_kernel_sgl( p, bat>>(5-r), n_tiles, d );
 	}
 	cuda_kernel_sep_f32( p, 3, 1.f              );
 	cuda_kernel_sep_i32( p, 4, slice_size       );
@@ -137,9 +133,7 @@ void cgevv_create_kernel( cuda_kernel_t* p, const cuda_context_t* p_ctx, int prc
 	int enb, i, gdx, gdy, bdx, bdy;
 	static const char* knames[][3]=
 	{
-		{ "d_scgevv_syncfree", "d_scgevv_block", "d_scgevv" },
-		{ "d_xcgevv_syncfree", "d_xcgevv_block", "d_xcgevv" },
-		{ "d_hcgevv_syncfree", "d_hcgevv_block", "d_hcgevv" }
+		{ "d_scgevv_syncfree", "d_scgevv_block", "d_scgevv" }
 	};
 	enb=prc?4:8;
 	if((na<=32)&(nb<=p_ctx->max_smemnb_per_block/(2*enb))){
