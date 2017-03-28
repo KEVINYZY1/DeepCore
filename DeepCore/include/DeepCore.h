@@ -20,7 +20,7 @@
 #include<stdint.h>
 #include<cuda.h>
 
-#define dcMaskDirectionForward		    0x00000000
+#define dcMaskDirectionForward		0x00000000
 #define dcMaskDirectionBackward         0x00000001
 
 #define dcMaskPrecisionFloat            0x00000000
