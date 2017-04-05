@@ -2,7 +2,7 @@
 #define __DeepCore_h__
 
 #if defined(_MSC_VER)&&(defined(_WIN32)||defined(_WIN64))
-	#if defined(_DLL)||defined(_WINDLL)
+	#ifdef _DLL
 		#define DEEPCOREAPIENTRY __declspec(dllexport)
 	#else
 		#define DEEPCOREAPIENTRY __declspec(dllimport)
@@ -20,7 +20,7 @@
 #include<stdint.h>
 #include<cuda.h>
 
-#define dcMaskDirectionForward		0x00000000
+#define dcMaskDirectionForward		    0x00000000
 #define dcMaskDirectionBackward         0x00000001
 
 #define dcMaskPrecisionFloat            0x00000000
