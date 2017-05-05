@@ -27,8 +27,8 @@
 #define dcMaskPrecisionHalf             0x00000002
 #define dcMaskPrecisionMixed            0x00000004
 
-#define dcMaskConvFused					0x00000008
-#define dcMaskConvBias					0x00000008
+#define dcMaskConvFused                 0x00000008
+#define dcMaskConvBias                  0x00000008
 #define dcMaskConvBatchNormalization	0x00000010
 
 #define	dcMaskActivationRelu            0x01000000
