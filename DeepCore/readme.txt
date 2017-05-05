@@ -8,9 +8,9 @@ DeepCore目前只支持一种数据格式：CNHW
     普通数据的布局为Channel_num*Batch_size*Height*Width
     对于filter数据的存储布局是QChannel_num*PChannel_num*Filter_size_y*Filter_size_x
 
-对于单精度和混合精度channel_num必须是16的倍数,对于半精度channel_num必须是32的倍数，对于fftconv和cellconv,filter_size_x必须等于filter_size_y且必须>1
+对于单精度和混合精度channel_num必须是16的倍数,对于半精度channel_num必须是32的倍数，对于fftconv和cellconv,filter_size_x和filter_size_y必须>1
 
-目前还未支持1x1的卷积核，但不久后即可提供支持。
+目前还不支持1x1的卷积核，但不久后即可提供支持。
 
 目前仅支持relu内置激活函数。
 
