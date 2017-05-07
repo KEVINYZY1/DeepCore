@@ -27,8 +27,8 @@
 #define dcMaskPrecisionHalf             0x00000002
 #define dcMaskPrecisionMixed            0x00000004
 
-#define dcMaskConvFused                 0x00000008
-#define dcMaskConvBias                  0x00000008
+#define dcMaskConvFused					0x00000008
+#define dcMaskConvBias					0x00000008
 #define dcMaskConvBatchNormalization	0x00000010
 
 #define	dcMaskActivationRelu            0x01000000
@@ -37,7 +37,7 @@
 #define	dcMaskActivationSigm            0x04000000
 
 #define dcMaskPoolingAvg                0x00000000
-#define dcMaskPoolingMax                0x00000002
+#define dcMaskPoolingMax                0x00000008
 
 #ifdef __cplusplus
 extern "C"
@@ -86,7 +86,7 @@ DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_fftconv_grad( dc_fftconvOp, void
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_cellconv( dc_cellconvOp, void*, void*, const void*, const void*, const void*, float, CUstream );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_cellconv_relu( dc_cellconvOp, void*, void*, const void*, const void*, const void*, float, float, CUstream );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_cellconv_grad( dc_cellconvOp, void*, void*, const void*, const void*, float, CUstream );
-DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_pooling( dc_poolingOp, int, void*, const void*, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_pooling( dc_poolingOp, void*, const void*, CUstream );
 
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_destroy_convOp( dc_convOp );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_destroy_fftconvOp( dc_fftconvOp );
