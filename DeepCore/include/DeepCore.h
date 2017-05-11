@@ -1,4 +1,4 @@
-﻿#ifndef __DeepCore_h__
+#ifndef __DeepCore_h__
 #define __DeepCore_h__
 
 #if defined(_MSC_VER)&&(defined(_WIN32)||defined(_WIN64))
@@ -27,13 +27,7 @@
 #define dcMaskPrecisionHalf             0x00000002
 #define dcMaskPrecisionMixed            0x00000004
 
-<<<<<<< HEAD
 #define dcMaskConvAddBiasOrMulDiff      0x00000008
-=======
-#define dcMaskConvFused                 0x00000008
-#define dcMaskConvBias                  0x00000008
-#define dcMaskConvBatchNormalization	0x00000010
->>>>>>> origin/master
 
 #define	dcMaskActivationRelu            0x01000000
 
