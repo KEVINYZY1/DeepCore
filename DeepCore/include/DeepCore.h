@@ -27,14 +27,9 @@
 #define dcMaskPrecisionHalf             0x00000002
 #define dcMaskPrecisionMixed            0x00000004
 
-#define dcMaskConvFused					0x00000008
-#define dcMaskConvBias					0x00000008
-#define dcMaskConvBatchNormalization	0x00000010
+#define dcMaskConvAddBiasOrMulDiff      0x00000008
 
 #define	dcMaskActivationRelu            0x01000000
-#define	dcMaskActivationElu             0x02000000
-#define	dcMaskActivationTanh            0x03000000
-#define	dcMaskActivationSigm            0x04000000
 
 #define dcMaskPoolingAvg                0x00000000
 #define dcMaskPoolingMax                0x00000008
@@ -53,6 +48,7 @@ typedef enum dc_status{
 	dc_success=0                 ,
 	dc_error_invalid_value       ,
 	dc_error_invalid_device      ,
+	dc_error_mutually_exclusive  ,
 	dc_error_out_of_range        ,
 	dc_error_out_of_maxsize      ,
 	dc_error_out_of_memory       ,
@@ -73,9 +69,16 @@ DEEPCOREAPIENTRY uint64_t    DEEPCOREAPICALL dc_create_tensor_shape_bias( uint32
 DEEPCOREAPIENTRY uint64_t    DEEPCOREAPICALL dc_create_tensor_shape_fc( uint32_t, uint32_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_tensor( void**, uint64_t );
 
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_clear_tensor( void*, uint64_t, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_copy_tensor( void*, uint64_t, const void*, uint64_t, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_input_tensor( void*, uint64_t, const void*, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_output_tensor( void*, const void*, uint64_t, CUstream );
+
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_convOp( dc_convOp*, int, uint32_t, uint64_t, uint64_t, uint32_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_fftconvOp( dc_fftconvOp*, size_t*, int, uint32_t, uint64_t, uint64_t, uint32_t );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_fftconvOp_grad( dc_fftconvOp*, size_t*, int, uint32_t, uint64_t, uint64_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_cellconvOp( dc_cellconvOp*, size_t*, int, uint32_t, uint64_t, uint64_t, uint32_t );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_cellconvOp_grad( dc_cellconvOp*, size_t*, int, uint32_t, uint64_t, uint64_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_poolingOp( dc_poolingOp*, int, uint32_t, uint64_t, uint32_t, uint32_t );
 
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_conv( dc_convOp, void*, const void*, const void*, const void*, float, CUstream );
