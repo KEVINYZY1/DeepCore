@@ -1,4 +1,4 @@
-﻿#ifndef __DeepCore_h__
+#ifndef __DeepCore_h__
 #define __DeepCore_h__
 
 #if defined(_MSC_VER)&&(defined(_WIN32)||defined(_WIN64))
@@ -48,6 +48,7 @@ typedef enum dc_status{
 	dc_success=0                 ,
 	dc_error_invalid_value       ,
 	dc_error_invalid_device      ,
+	dc_error_mutually_exclusive  ,
 	dc_error_out_of_range        ,
 	dc_error_out_of_maxsize      ,
 	dc_error_out_of_memory       ,
@@ -68,6 +69,11 @@ DEEPCOREAPIENTRY uint64_t    DEEPCOREAPICALL dc_create_tensor_shape_filter( int,
 DEEPCOREAPIENTRY uint64_t    DEEPCOREAPICALL dc_create_tensor_shape_bias( int, int );
 DEEPCOREAPIENTRY uint64_t    DEEPCOREAPICALL dc_create_tensor_shape_fc( int, uint32_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_tensor( void**, uint64_t );
+
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_clear_tensor( void*, uint64_t, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_copy_tensor( void*, uint64_t, const void*, uint64_t, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_input_tensor( void*, uint64_t, const void*, CUstream );
+DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_output_tensor( void*, const void*, uint64_t, CUstream );
 
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_convOp( dc_convOp*, int, uint32_t, uint64_t, uint64_t, uint32_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_create_fftconvOp( dc_fftconvOp*, size_t*, int, uint32_t, uint64_t, uint64_t, uint32_t );
