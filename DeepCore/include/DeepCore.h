@@ -48,12 +48,11 @@ typedef enum dc_status{
 	dc_success=0                 ,
 	dc_error_invalid_value       ,
 	dc_error_invalid_device      ,
-	dc_error_mutually_exclusive  ,
 	dc_error_out_of_range        ,
 	dc_error_out_of_maxsize      ,
 	dc_error_out_of_memory       ,
 	dc_error_out_of_device_memory,
-	dc_error_mutually_exclusive  ,
+	dc_error_mutually_exclusive
 } dc_status_t;
 
 DEEPCOREAPIENTRY dc_status_t DEEPCOREAPICALL dc_init();
