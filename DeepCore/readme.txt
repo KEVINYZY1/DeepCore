@@ -1,4 +1,4 @@
-﻿DeepCore_v0.8
+DeepCore_v0.8
 
 支持的硬件：计算能力为5.0,5.2,6.0,6.1的NVIDIA GPU。
 
@@ -8,7 +8,7 @@ DeepCore目前只支持一种数据格式：CNHW
     普通数据的布局为Channel_num*Batch_size*Height*Width
     对于filter数据的存储布局是QChannel_num*PChannel_num*Filter_size_y*Filter_size_x
 
-对于单精度和混合精度channel_num必须是16的倍数,对于半精度channel_num必须是32的倍数，对于fftconv和cellconv,filter_size_x和filter_size_y必须>1
+对于fftconv和cellconv,channel_num必须是32的倍数，filter_size_x和filter_size_y必须>1
 
 目前仅支持Relu内置激活函数
 
