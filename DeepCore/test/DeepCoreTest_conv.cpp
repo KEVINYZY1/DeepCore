@@ -89,7 +89,7 @@ int main()
 					cuMemFree(d_p);
 					cuMemFree(d_q);
 					cuMemFree(d_w);
-					cuMemFree(d_aux);
+					if(auxnb!=0){ cuMemFree(d_aux); }
 					
 					uint64_t s_p=dc_create_tensor_shape( dcMaskPrecisionFloat, (ps<<16)|ps, (pnc<<16)|bat );
 					uint64_t s_q=dc_create_tensor_shape( dcMaskPrecisionFloat, (qs<<16)|qs, (qnc<<16)|bat );
@@ -130,7 +130,6 @@ int main()
 					cuMemFree(d_p);
 					cuMemFree(d_q);
 					cuMemFree(d_w);
-					cuMemFree(d_aux);
 				}
 			}
 		}
