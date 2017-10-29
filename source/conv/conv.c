@@ -3,9 +3,9 @@
 static void generate_slider_indices( uint32_t* p_indices, int prc, int lda, int ldb, int anr, int bnr, int dx, int fx, int fy, int pnc, int qnc, int su, int sv, int ng )
 {
     int b, enb, nc, u, v, c, i, n;
-	b=prc&0x1; 
-	nc=(pnc+b)>>b;
-	enb=prc<2?4:2;
+    b=prc&0x1; 
+    nc=(pnc+b)>>b;
+    enb=prc<2?4:2;
     for( c=0; c<nc; ++c ){
         for( v=0; v<fy; ++v ){
             for( u=0; u<fx; ++u ){
@@ -20,7 +20,7 @@ static void generate_slider_indices( uint32_t* p_indices, int prc, int lda, int 
     {
         int a=fx*fy*enb;
         for( c=0; c<nc; ++c ){
-			uint32_t idx=2*c*a;
+            uint32_t idx=2*c*a;
             for( i=0; i<a; ++i ){
                 *p_indices=idx+i;   ++p_indices;
                 *p_indices=idx+i+a; ++p_indices;
@@ -37,12 +37,12 @@ static void sconv_create_kernel( idc_convOp_t* Op, uint32_t* p_temp, const cuda_
     static const uint32_t argmask[]={ AM_3P_AS, AM_3P_BS, AM_4P_AS, AM_4P_BS, AM_5P_AS, AM_5P_BS };
     static const char* s_size[]={ "032x256", "largep5", "064x064", "064x128", "064x256", "largep6", "128x032", "128x064", "128x128", "largep7" };
     static const uint8_t block_size[]={ 255, 63, 127, 255, 127, 127, 255 };
-	static const uint8_t ofs[]={ 0, 1, 4 };
+    static const uint8_t ofs[]={ 0, 1, 4 };
     char kname[64]={ "dk_" };
     cuda_kernel_t* p_kernel=&Op->kernel;
     ix=(cnr<=32)?0:(((cnr<=64)|((cnr>128)&(cnr<=192)))?1:2);
-	if(ix==0){ iy=8; } else
-	if(ix==1){ iy=(onc>64)+(((onc>128)&(onc<=256))|(onc>384)); } else { iy=(onc>32)+(onc>64); }
+    if(ix==0){ iy=8; } else
+    if(ix==1){ iy=(onc>64)+(((onc>128)&(onc<=256))|(onc>384)); } else { iy=(onc>32)+(onc>64); }
     sx=5+ix;
     sy=(ix==0)?8:((ix==1?6:5)+iy);
     tile_y=1<<sy;
@@ -50,15 +50,15 @@ static void sconv_create_kernel( idc_convOp_t* Op, uint32_t* p_temp, const cuda_
     idc_strcat( kname, s_size[ofs[ix]+iy+non_cached] );
     if(bias){ idc_strcat( kname, "_bias" ); }
     if(relu){ idc_strcat( kname, "_relu" ); }
-	if((ng>1)&(non_cached==0)){ idc_strcat( kname, "_gp" ); }
+    if((ng>1)&(non_cached==0)){ idc_strcat( kname, "_gp" ); }
     cuda_context_create_kernel( p_kernel, p_ctx->module_conv, kname );
     cuda_kernel_sao( p_kernel, argmask[(non_cached<<2)|(bias<<1)|relu] );
     cuda_kernel_sbl( p_kernel, block_size[ofs[ix]+iy]+1, 1 );
-	if((ix==0)|((ix>0)&(ix>=iy))){
+    if((ix==0)|((ix>0)&(ix>=iy))){
         cuda_kernel_sgl( p_kernel, (cnr+(1<<sx)-1)>>sx, (onc+tile_y-1)>>sy, ng );
-	} else {
-		cuda_kernel_sgl( p_kernel, (cnr+(1<<sx)-1)>>sx, ng, 1 );
-	}
+    } else {
+	cuda_kernel_sgl( p_kernel, (cnr+(1<<sx)-1)>>sx, ng, 1 );
+    }
 }
 static void hconv_create_kernel( idc_convOp_t* Op, uint32_t* p_temp, const cuda_context_t* p_ctx, int inc, int onc, int bnr, int cnr, int bias, int relu, int non_cached, int ng )
 {
@@ -69,22 +69,22 @@ static void hconv_create_kernel( idc_convOp_t* Op, uint32_t* p_temp, const cuda_
     static const uint8_t ofs[]={ 0, 2 };
     char kname[64]={ "dk_hconv_" };
     cuda_kernel_t* p_kernel=&Op->kernel;
-	ix=((cnr>128)&(cnr<=256))|(cnr>384);
-	if(ix==0){ iy=((onc>128)&(onc<=256))|(onc>384); } else { iy=(onc>32)+(onc>64); }
+    ix=((cnr>128)&(cnr<=256))|(cnr>384);
+    if(ix==0){ iy=((onc>128)&(onc<=256))|(onc>384); } else { iy=(onc>32)+(onc>64); }
     tile_x=1<<(7+ix);
     tile_y=1<<((ix==0?7:5)+iy);
     idc_strcat( kname, s_size[ofs[ix]+iy+non_cached] );
     if(bias){ idc_strcat( kname, "_bias" ); }
     if(relu){ idc_strcat( kname, "_relu" ); }
-	if((ng>1)&(non_cached==0)){ idc_strcat( kname, "_gp" ); }
+    if((ng>1)&(non_cached==0)){ idc_strcat( kname, "_gp" ); }
     cuda_context_create_kernel( p_kernel, p_ctx->module_conv_fp16, kname );
     cuda_kernel_sao( p_kernel, argmask[(non_cached<<2)|(bias<<1)|relu] );
     cuda_kernel_sbl( p_kernel, block_size[ofs[ix]+iy], 1 );
-	if((ix==0)|((ix>0)&(iy>1))){
-		cuda_kernel_sgl( p_kernel, (cnr+tile_x-1)/tile_x, (onc+tile_y-1)/tile_y, ng );
-	} else {
-		cuda_kernel_sgl( p_kernel, (cnr+tile_x-1)/tile_x, ng, 1 );
-	}
+    if((ix==0)|((ix>0)&(iy>1))){
+	cuda_kernel_sgl( p_kernel, (cnr+tile_x-1)/tile_x, (onc+tile_y-1)/tile_y, ng );
+    } else {
+	cuda_kernel_sgl( p_kernel, (cnr+tile_x-1)/tile_x, ng, 1 );
+    }
 }
 
 int idc_conv_createOp( idc_convOp_t* Op, uint32_t* p_temp, const cuda_context_t* p_ctx, int ng, uint32_t mask, int pnx, int pny, int pnc, int ldp, int fnx, int fny, int ldf, int qnx, int qny, int qnc, int ldq, int bat, int su, int sv )
@@ -98,10 +98,10 @@ int idc_conv_createOp( idc_convOp_t* Op, uint32_t* p_temp, const cuda_context_t*
     bnr=pnc*fny*fnx;
     cnr=bat*qny*qnx;
     cnr=IDC_AFFIS(cnr,2);
-	enb=prc<2?4:2;
+    enb=prc<2?4:2;
     Op->d_indices=Op->d_indices_cmem=0;
-	Op->indices_nb=ldf*(prc!=1?4:6);        
-	if(cuMemAlloc( &Op->d_indices, Op->indices_nb )!=CUDA_SUCCESS)
+    Op->indices_nb=ldf*(prc!=1?4:6);        
+    if(cuMemAlloc( &Op->d_indices, Op->indices_nb )!=CUDA_SUCCESS)
         return idc_error_out_of_device_memory;
     non_cached=Op->indices_nb>p_ctx->cmemnb;
     if(prc!=1){
@@ -119,11 +119,11 @@ int idc_conv_createOp( idc_convOp_t* Op, uint32_t* p_temp, const cuda_context_t*
     }
     bnr=ldf;
     ldq*=enb;
-	ldp*=enb;
+    ldp*=enb;
     ldf*=enb;
     i=non_cached+bias+relu;
     cuda_kernel_sep_i32( p_kernel, 4+i, ldq );
-	if(ng>1){ cuda_kernel_sep_i32( p_kernel, 5+i, ldp ); ++i; }
+    if(ng>1){ cuda_kernel_sep_i32( p_kernel, 5+i, ldp ); ++i; }
     cuda_kernel_sep_i32( p_kernel, 5+i, ldf );
     cuda_kernel_sep_i32( p_kernel, 6+i, qnx );
     cuda_kernel_sep_i32( p_kernel, 7+i, qny );
