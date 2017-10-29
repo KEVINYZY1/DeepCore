@@ -72,36 +72,36 @@ static const unsigned int long long kbin_blas_sm61[]=
 
 static const unsigned int long long kbin_conv_fp16_sm50[]=
 {
-#include"../../include/dev/conv/kbin_sm50.h"
+#include"../../include/dev/conv_fp16/kbin_sm50.h"
 };
 static const unsigned int long long kbin_conv_fp16_sm52[]=
 {
-#include"../../include/dev/conv/kbin_sm52.h"
+#include"../../include/dev/conv_fp16/kbin_sm52.h"
 };
 static const unsigned int long long kbin_conv_fp16_sm60[]=
 {
-#include"../../include/dev/conv/kbin_sm60.h"
+#include"../../include/dev/conv_fp16/kbin_sm60.h"
 };
 static const unsigned int long long kbin_conv_fp16_sm61[]=
 {
-#include"../../include/dev/conv/kbin_sm61.h"
+#include"../../include/dev/conv_fp16/kbin_sm61.h"
 };
 
 static const unsigned int long long kbin_blas_fp16_sm50[]=
 {
-#include"../../include/dev/blas/kbin_sm50.h"
+#include"../../include/dev/blas_fp16/kbin_sm50.h"
 };
 static const unsigned int long long kbin_blas_fp16_sm52[]=
 {
-#include"../../include/dev/blas/kbin_sm52.h"
+#include"../../include/dev/blas_fp16/kbin_sm52.h"
 };
 static const unsigned int long long kbin_blas_fp16_sm60[]=
 {
-#include"../../include/dev/blas/kbin_sm60.h"
+#include"../../include/dev/blas_fp16/kbin_sm60.h"
 };
 static const unsigned int long long kbin_blas_fp16_sm61[]=
 {
-#include"../../include/dev/blas/kbin_sm61.h"
+#include"../../include/dev/blas_fp16/kbin_sm61.h"
 };
 
 static const unsigned int long long* p_devbin[][6]=
@@ -135,7 +135,7 @@ int cuda_context_create( cuda_context_t* p_ctx, char* p_temp )
     case 60: i=2; break;
     case 61: i=3; break;
     }    
-	cuModuleLoadFatBinary( &p_ctx->module          , p_devbin[i][0] );
+    cuModuleLoadFatBinary( &p_ctx->module          , p_devbin[i][0] );
     cuModuleLoadFatBinary( &p_ctx->module_fftconv  , p_devbin[i][1] );
     cuModuleLoadFatBinary( &p_ctx->module_conv     , p_devbin[i][2] );
     cuModuleLoadFatBinary( &p_ctx->module_blas     , p_devbin[i][3] );
@@ -143,7 +143,7 @@ int cuda_context_create( cuda_context_t* p_ctx, char* p_temp )
     cuModuleLoadFatBinary( &p_ctx->module_blas_fp16, p_devbin[i][5] );
     n=sizeof(g_fftRF_ofs)/sizeof(g_fftRF_ofs[0])-1;
     if(cuMemAlloc(&p_ctx->d_RF[0], g_fftRF_ofs[n]*(sizeof(float2)+sizeof(int)) )!=CUDA_SUCCESS){
-		cuModuleUnload( p_ctx->module           );
+        cuModuleUnload( p_ctx->module           );
         cuModuleUnload( p_ctx->module_fftconv   );
         cuModuleUnload( p_ctx->module_conv      );
         cuModuleUnload( p_ctx->module_blas      );
@@ -167,7 +167,7 @@ int cuda_context_create( cuda_context_t* p_ctx, char* p_temp )
         cuMemcpyHtoD( p_ctx->d_RF[1], p_hRF, g_fftRF_ofs[n]*sizeof(int) );
     }
     cuDeviceGetAttribute( &p_ctx->n_sm                , CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT       , p_ctx->dev );
-    cuDeviceGetAttribute( &p_ctx->cmemnb			  , CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY	   , p_ctx->dev );
+    cuDeviceGetAttribute( &p_ctx->cmemnb              , CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY      , p_ctx->dev );
     cuDeviceGetAttribute( &p_ctx->max_nbx             , CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X             , p_ctx->dev );
     cuDeviceGetAttribute( &p_ctx->max_nby             , CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y             , p_ctx->dev );
     cuDeviceGetAttribute( &p_ctx->max_block_size      , CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X            , p_ctx->dev );
@@ -190,7 +190,7 @@ void cuda_context_release( cuda_context_t* p_ctx )
     if( p_ctx->ctx!=NULL ){
         cuda_context_bind( p_ctx );
         cuMemFree( p_ctx->d_RF[0] ); 
-		cuModuleUnload( p_ctx->module           );
+        cuModuleUnload( p_ctx->module           );
         cuModuleUnload( p_ctx->module_fftconv   );
         cuModuleUnload( p_ctx->module_conv      );
         cuModuleUnload( p_ctx->module_blas      );
