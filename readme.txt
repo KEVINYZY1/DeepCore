@@ -15,3 +15,8 @@
     通过dc_gemmOp支持1x1卷积。
 
     目前仅支持Relu内置激活函数,forward支持relu激活函数,bias融合;backward支持relu求导融合以及其它任意激活函数的导数相乘融合。
+
+    支持reduction操作。
+
+    加入了对batch-normalization的支持。
+    
