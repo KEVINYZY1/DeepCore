@@ -10,7 +10,8 @@
     普通数据的布局为Channel_num*Batch_size*Height*Width;
     对于filter数据的存储布局是QChannel_num*PChannel_num*Filter_size_y*Filter_size_x。
 
-    卷积操作目前支持三种算法：conv, fftconv, cellconv, conv算法暂时不支持反向卷积核padding操作;
+    卷积操作目前支持三种算法：conv, fftconv, cellconv, conv算法暂时不支持反向卷积和padding操作;
+    conv支持分组卷积；
     对于fftconv和cellconv,filter_size_x和filter_size_y必须>1;
     通过dc_gemmOp支持1x1卷积。
 
