@@ -20,4 +20,7 @@
     支持reduction操作。
 
     加入了对batch-normalization的支持。
+
+
+    vdeepcore是专门针对volta优化的版本且仅支持volta GPU,由于专门针对tensor core进行了优化，因此数据结构差别很大，因此为简单以及避免代码过度膨胀，从volta开始会有一个新的分支版本且与之前的版本不兼容
     
