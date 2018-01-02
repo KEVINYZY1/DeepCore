@@ -14,13 +14,10 @@
 #include<stdint.h>
 #include<cuda.h>
 
-#define dcMaskDirectionForward  0x0000
-#define dcMaskDirectionBackward 0x0001
-#define dcMaskPrecisionFloat    0x0000
-#define dcMaskPrecisionHalf     0x0002
-#define dcMaskPrecisionMixed    0x0004
-#define dcMaskAddBias           0x0008
-#define	dcMaskActivationRelu    0x0010
+#define dcMaskDirectionForward  0x00
+#define dcMaskDirectionBackward 0x01
+#define dcMaskAddBiasOrMulDrv   0x08
+#define	dcMaskActivationRelu    0x10
 
 #ifdef __cplusplus
 extern "C"
@@ -58,7 +55,9 @@ DEEPCOREAPIENTRY dc_status_t dc_create_tensor( void**, uint64_t );
 DEEPCOREAPIENTRY dc_status_t dc_release_tensor( void* );
 
 DEEPCOREAPIENTRY dc_status_t dc_tensor_zero( void*, uint64_t, CUstream );
-DEEPCOREAPIENTRY dc_status_t dc_tensor_copy( void*, uint64_t, const void*, uint64_t, size_t, size_t, CUstream );
+DEEPCOREAPIENTRY dc_status_t dc_tensor_subzero( void*, uint64_t, size_t, size_t, CUstream );
+DEEPCOREAPIENTRY dc_status_t dc_tensor_copy( void*, uint64_t, const void*, uint64_t, CUstream );
+DEEPCOREAPIENTRY dc_status_t dc_tensor_subcopy( void*, uint64_t, const void*, uint64_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_store( void*, uint64_t, const void*, size_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_load( void*, size_t, const void*, uint64_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_create_convOp( dc_convOp*, size_t*, uint32_t, int, uint64_t, uint64_t, uint64_t, uint32_t );
