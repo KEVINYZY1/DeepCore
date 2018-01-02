@@ -1,4 +1,4 @@
-﻿deepcore_v0.9
+﻿deepcore_v1.0
 
     DeepCore是一款超轻量级专为CNN批量训练量身打造的高度优化的核心计算库。
 
