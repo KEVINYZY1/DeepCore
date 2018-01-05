@@ -16,79 +16,96 @@ int main()
 
 	tensor_shape_t shapes[]={{48,3,32,32,1},{48,3,32,64,1},{24,3,32,128,1},{8,3,32,64,1},{8,3,32,128,1},{8,3,32,256,1},{6,3,32,256,1}};
 
-	for( int e=0; e<sizeof(shapes)/sizeof(shapes[0]); e++ )
+	for( int dir=1; dir<2; ++dir )
 	{
-		int pn=shapes[e].ds;
-		int fn=shapes[e].fs;
-		int qn=pn-fn+1;
-		int pnc=shapes[e].pnc;
-		int qnc=shapes[e].qnc;
-		int bat=shapes[e].bat;
-		int stride=1;
-		uint64_t qshape=dc_create_tensor_shape( dcMaskPrecisionFloat, (qn<<16)|qn, (qnc<<16)|bat );
-		uint64_t pshape=dc_create_tensor_shape( dcMaskPrecisionFloat, (pn<<16)|pn, (pnc<<16)|bat );
-		uint64_t kshape=dc_create_tensor_shape_filter( dcMaskPrecisionFloat, (fn<<16)|fn, (qnc<<16)|pnc );
-
-		dc_convOp Op;
-		if(dc_create_convOp( &Op, dcMaskPrecisionFloat|dcMaskDirectionForward, 1, pshape, kshape, qshape, (stride<<8)|stride )!=dc_success){
-			printf( "error : cellconvOp create failed!\n" );
-			dc_exit();
-			return 0;
-		}
-
-		void *d_a, *d_b, *d_c;
-		dc_create_tensor( (void**)&d_a, pshape );
-		dc_create_tensor( (void**)&d_b, kshape );
-		dc_create_tensor( (void**)&d_c, qshape );
-		
-		float* a=new float[bat*pnc*pn*pn];
-		float* b=new float[qnc*pnc*fn*fn];
-		float* c=new float[bat*qnc*qn*qn];
-		float* d=new float[bat*qnc*qn*qn];
-
-		for( int i=0; i<pnc; ++i )
+		for( int e=0; e<sizeof(shapes)/sizeof(shapes[0]); e++ )
 		{
-			for( int z=0; z<bat; ++z ){
-				for( int y=0; y<pn; ++y ){
-					for( int x=0; x<pn; ++x ){
-						a[((i*bat+z)*pn+y)*pn+x]=((float)rand())/RAND_MAX;
+			int pn=shapes[e].ds;
+			int fn=shapes[e].fs;
+			int qn=pn-fn+1;
+			int pnc=shapes[e].pnc;
+			int qnc=shapes[e].qnc;
+			int bat=shapes[e].bat;
+			int stride=1;
+			int inc=dir==0?pnc:qnc;
+			int onc=dir==0?qnc:pnc;
+			int in=dir==0?pn:qn;
+			int on=dir==0?qn:pn;
+			int pad=dir==0?0:(fn-1);
+			uint64_t qshape=dc_create_tensor_shape( dcMaskPrecisionFloat, (qn<<16)|qn, (qnc<<16)|bat );
+			uint64_t pshape=dc_create_tensor_shape( dcMaskPrecisionFloat, (pn<<16)|pn, (pnc<<16)|bat );
+			uint64_t kshape=dc_create_tensor_shape_filter( dcMaskPrecisionFloat, (fn<<16)|fn, (qnc<<16)|pnc );
+			uint64_t ishape=dir==0?pshape:qshape;
+			uint64_t oshape=dir==0?qshape:pshape;
+
+			dc_convOp Op;
+		    size_t auxnb;
+			if(dc_create_convOp( &Op, &auxnb, dcMaskPrecisionFloat|dir, 1, pshape, kshape, qshape, (stride<<8)|stride )!=dc_success){
+				printf( "error : cellconvOp create failed!\n" );
+				dc_exit();
+				return 0;
+			}
+			void *d_a, *d_b, *d_c, *d_aux;
+			dc_create_tensor( (void**)&d_a, ishape );
+			dc_create_tensor( (void**)&d_b, kshape );
+			dc_create_tensor( (void**)&d_c, oshape );
+		    if(auxnb>0){
+		        uint64_t shape_linear=dc_create_tensor_shape_linear( auxnb );
+				dc_create_tensor( (void**)&d_aux, shape_linear ); 
+			}
+
+			float* a=new float[bat*inc*in*in];
+			float* b=new float[pnc*qnc*fn*fn];
+			float* c=new float[bat*onc*on*on];
+			float* d=new float[bat*onc*on*on];
+
+			for( int i=0; i<inc; ++i )
+			{
+				for( int z=0; z<bat; ++z ){
+					for( int y=0; y<in; ++y ){
+						for( int x=0; x<in; ++x ){
+							a[((i*bat+z)*in+y)*in+x]=((float)rand())/RAND_MAX;
+						}
 					}
 				}
 			}
-		}
-		for( int i=0; i<fn*fn*pnc*qnc; ++i ){
-			b[i]=((float)rand())/RAND_MAX;
-		}
-
-		for( int i=0; i<qnc; ++i ){
-			for( int s=0; s<bat; ++s ){
-				conv( &c[(i*bat+s)*qn*qn], &a[s*pn*pn], &b[i*pnc*fn*fn], 0, false, pn, pn, fn, fn, qn, qn, pnc, bat, 0, 0, fn*fn );
+			for( int i=0; i<fn*fn*pnc*qnc; ++i ){
+				b[i]=((float)rand())/RAND_MAX;
 			}
-		}
 
-		dc_tensor_store( d_a, pshape, a, bat*pn*pn*sizeof(float), bat*pn*pn*sizeof(float), pnc, NULL );
-		dc_tensor_store( d_b, kshape, b, pnc*fn*fn*sizeof(float), pnc*fn*fn*sizeof(float), qnc, NULL );
-		if(dc_conv( Op, d_c, d_a, d_b, NULL, 1.f, NULL )!=dc_success){
-			printf( "error: conv exec failed!\n" );
-		}
-		dc_tensor_load( d, bat*qn*qn*sizeof(float), d_c, qshape, bat*qn*qn*sizeof(float), qnc, NULL );
-		cuCtxSynchronize();
+			for( int i=0; i<onc; ++i ){
+				for( int s=0; s<bat; ++s ){
+					conv( &c[(i*bat+s)*on*on], &a[s*in*in], &b[i*fn*fn], dir, dir, in, in, fn, fn, on, on, inc, bat, pad, pad, pnc*fn*fn );
+				}
+			}
 
-		bool is_ok=check( c, d, bat*qnc*qn*qn );
-		if(!is_ok){
-			printf( "examples[%d] is compute failed!\n", e );
-			goto __LAB0;
+			dc_tensor_store( d_a, ishape, a, bat*in*in*sizeof(float), bat*in*in*sizeof(float), inc, NULL );
+			dc_tensor_store( d_b, kshape, b, pnc*fn*fn*sizeof(float), pnc*fn*fn*sizeof(float), qnc, NULL );
+			if(dc_conv( Op, d_aux, d_c, d_a, d_b, NULL, 1.f, NULL )!=dc_success){
+				printf( "error: conv exec failed!\n" );
+			}
+			dc_tensor_load( d, bat*on*on*sizeof(float), d_c, oshape, bat*on*on*sizeof(float), onc, NULL );
+			cuCtxSynchronize();
+
+			bool is_ok=check( c, d, bat*pnc*on*on );
+			if(!is_ok){
+				printf( "examples[%d] is compute failed!\n", e );
+				goto __LAB0;
+			}
+		__LAB0:
+			dc_release_tensor( d_a );
+			dc_release_tensor( d_b );
+			dc_release_tensor( d_c );
+		    if(auxnb!=0){
+				dc_release_tensor( d_aux );
+			}
+			dc_destroy_convOp(Op);
+			delete[] a;
+			delete[] b;
+			delete[] c;
+			delete[] d;
+			if(!is_ok) break;
 		}
-	__LAB0:
-		dc_release_tensor( d_a );
-		dc_release_tensor( d_b );
-		dc_release_tensor( d_c );
-		dc_destroy_convOp(Op);
-		delete[] a;
-		delete[] b;
-		delete[] c;
-		delete[] d;
-		if(!is_ok) break;
 	}
 	dc_exit();
 }
