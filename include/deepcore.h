@@ -65,7 +65,6 @@ DEEPCOREAPIENTRY dc_status_t dc_release_tensor( void* );
 
 DEEPCOREAPIENTRY dc_status_t dc_tensor_zero( void*, uint64_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_subzero( void*, uint64_t, size_t, size_t, CUstream );
-DEEPCOREAPIENTRY dc_status_t dc_tensor_store( void*, uint64_t, const void*, size_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_copy( void*, uint64_t, const void*, uint64_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_subcopy( void*, uint64_t, const void*, uint64_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_store( void*, uint64_t, const void*, size_t, size_t, size_t, CUstream );
