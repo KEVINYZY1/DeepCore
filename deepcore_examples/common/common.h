@@ -9,7 +9,7 @@ typedef struct tensor_shape{
     int bat;
 } tensor_shape_t;
 
-void conv( float* c, const float* __restrict a, const float* __restrict b, int dir, int is_flip, int anx, int any, int bnx, int bny, int cnx, int cny, int nc, int bat, int pad_x, int pad_y, int ofs )
+void conv( float* c, const float* __restrict a, const float* __restrict b, int is_flip, int anx, int any, int bnx, int bny, int cnx, int cny, int nc, int bat, int pad_x, int pad_y, int ofs )
 {
 	for( int y=0; y<cny; ++y )
 	{

@@ -14,9 +14,9 @@ int main()
 	}
 	dc_set_device(0);
 
-	tensor_shape_t shapes[]={{48,3,32,32,1},{48,3,32,64,1},{24,3,32,128,1},{8,3,32,64,1},{8,3,32,128,1},{8,3,32,256,1},{6,3,32,256,1}};
+	tensor_shape_t shapes[]={{48,3,32,32,1},{48,3,32,64,1},{24,3,64,128,1},{8,3,32,64,1},{8,3,64,128,1},{8,3,32,256,1},{6,3,64,256,1}};
 
-	for( int dir=1; dir<2; ++dir )
+	for( int dir=0; dir<2; ++dir )
 	{
 		for( int e=0; e<sizeof(shapes)/sizeof(shapes[0]); e++ )
 		{
@@ -41,7 +41,7 @@ int main()
 			dc_convOp Op;
 		    size_t auxnb;
 			if(dc_create_convOp( &Op, &auxnb, dcMaskPrecisionFloat|dir, 1, pshape, kshape, qshape, (stride<<8)|stride )!=dc_success){
-				printf( "error : cellconvOp create failed!\n" );
+				printf( "error : convOp create failed!\n" );
 				dc_exit();
 				return 0;
 			}
@@ -75,7 +75,7 @@ int main()
 
 			for( int i=0; i<onc; ++i ){
 				for( int s=0; s<bat; ++s ){
-					conv( &c[(i*bat+s)*on*on], &a[s*in*in], &b[i*fn*fn], dir, dir, in, in, fn, fn, on, on, inc, bat, pad, pad, pnc*fn*fn );
+					conv( &c[(i*bat+s)*on*on], &a[s*in*in], &b[i*(dir==0?(pnc*fn*fn):(fn*fn))], dir, in, in, fn, fn, on, on, inc, bat, pad, pad, dir==0?(fn*fn):(pnc*fn*fn) );
 				}
 			}
 
@@ -87,12 +87,10 @@ int main()
 			dc_tensor_load( d, bat*on*on*sizeof(float), d_c, oshape, bat*on*on*sizeof(float), onc, NULL );
 			cuCtxSynchronize();
 
-			bool is_ok=check( c, d, bat*pnc*on*on );
+			bool is_ok=check( c, d, onc*bat*on*on );
 			if(!is_ok){
-				printf( "examples[%d] is compute failed!\n", e );
-				goto __LAB0;
+				printf( "examples[%d][%d] is compute failed!\n", dir, e );
 			}
-		__LAB0:
 			dc_release_tensor( d_a );
 			dc_release_tensor( d_b );
 			dc_release_tensor( d_c );
@@ -104,8 +102,9 @@ int main()
 			delete[] b;
 			delete[] c;
 			delete[] d;
-			if(!is_ok) break;
+			if(!is_ok) goto __EXIT__;
 		}
 	}
+__EXIT__:
 	dc_exit();
 }
