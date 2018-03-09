@@ -1,7 +1,7 @@
 ﻿#ifndef __deepcore_h__
 #define __deepcore_h__
 
-#if defined(_MSC_VER)&&(defined(_WIN32)||defined(_WIN64))
+#if defined(_MSC_VER)&&defined(_WIN64)
 	#ifdef _DLL
 		#define DEEPCOREAPIENTRY __declspec(dllexport)
 	#else
@@ -24,11 +24,12 @@ extern "C"
 {
 #endif
 
-typedef struct __dc_convOp    * dc_convOp;
-typedef struct __dc_gemmOp    * dc_gemmOp;
-typedef struct __dc_fftconvOp * dc_fftconvOp;
-typedef struct __dc_biasOp    * dc_biasOp;
-typedef struct __dc_bnormOp   * dc_bnormOp;
+typedef struct __dc_convOp   * dc_convOp;
+typedef struct __dc_gemmOp   * dc_gemmOp;
+typedef struct __dc_fftconvOp* dc_fftconvOp;
+typedef struct __dc_biasOp   * dc_biasOp;
+typedef struct __dc_poolingOp* dc_poolingOp;
+typedef struct __dc_bnormOp  * dc_bnormOp;
 
 typedef enum dc_status{
 	dc_success=0                 ,
@@ -54,17 +55,20 @@ DEEPCOREAPIENTRY uint64_t    dc_create_tensor_shape_linear( size_t );
 DEEPCOREAPIENTRY dc_status_t dc_create_tensor( void**, uint64_t );
 DEEPCOREAPIENTRY dc_status_t dc_release_tensor( void* );
 
+DEEPCOREAPIENTRY uint32_t    dc_tensor_get_lds( uint64_t );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_zero( void*, uint64_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_subzero( void*, uint64_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_copy( void*, uint64_t, const void*, uint64_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_subcopy( void*, uint64_t, const void*, uint64_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_store( void*, uint64_t, const void*, size_t, size_t, size_t, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_tensor_load( void*, size_t, const void*, uint64_t, size_t, size_t, CUstream );
+
 DEEPCOREAPIENTRY dc_status_t dc_create_convOp( dc_convOp*, size_t*, uint32_t, int, uint64_t, uint64_t, uint64_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t dc_create_gemmOp( dc_gemmOp*, uint32_t, int, uint64_t, uint64_t );
 DEEPCOREAPIENTRY dc_status_t dc_create_gemmOp_grad( dc_gemmOp*, uint32_t, int, uint64_t, uint64_t );
 DEEPCOREAPIENTRY dc_status_t dc_create_fftconvOp( dc_fftconvOp*, size_t*, int, uint64_t, uint64_t, uint64_t );
 DEEPCOREAPIENTRY dc_status_t dc_create_biasOp( dc_biasOp*, uint64_t, uint64_t );
+DEEPCOREAPIENTRY dc_status_t dc_create_poolingOp( dc_poolingOp*, uint32_t, uint64_t, uint64_t, uint32_t );
 DEEPCOREAPIENTRY dc_status_t dc_create_bnormOp( dc_bnormOp*, uint32_t, uint64_t, uint64_t );
 
 DEEPCOREAPIENTRY dc_status_t dc_conv( dc_convOp, void*, void*, const void*, const void*, const void*, float, CUstream );
@@ -72,6 +76,7 @@ DEEPCOREAPIENTRY dc_status_t dc_gemm( dc_convOp, void*, const void*, const void*
 DEEPCOREAPIENTRY dc_status_t dc_gemm_grad( dc_convOp, void*, const void*, const void*, float, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_fftconv_grad( dc_fftconvOp, void*, void*, const void*, const void*, float, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_bias_grad( dc_biasOp, void*, const void*, float, CUstream );
+DEEPCOREAPIENTRY dc_status_t dc_pooling( dc_poolingOp, void*, const void*, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_bnorm( dc_bnormOp, void*, void*, void*, const void*, const void*, const void*, CUstream );
 DEEPCOREAPIENTRY dc_status_t dc_bnorm_grad( dc_bnormOp, void*, void*, void*, const void*, const void*, const void*, const void*, const void*, CUstream );
 
@@ -79,6 +84,7 @@ DEEPCOREAPIENTRY dc_status_t dc_destroy_convOp( dc_convOp );
 DEEPCOREAPIENTRY dc_status_t dc_destroy_gemmOp( dc_gemmOp );
 DEEPCOREAPIENTRY dc_status_t dc_destroy_fftconvOp( dc_fftconvOp );
 DEEPCOREAPIENTRY dc_status_t dc_destroy_biasOp( dc_biasOp );
+DEEPCOREAPIENTRY dc_status_t dc_destroy_poolingOp( dc_poolingOp );
 DEEPCOREAPIENTRY dc_status_t dc_destroy_bnormOp( dc_bnormOp );
 DEEPCOREAPIENTRY dc_status_t dc_exit();
 
