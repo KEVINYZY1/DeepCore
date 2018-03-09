@@ -45,14 +45,12 @@ int main()
 				return 0;
 			}
 
-			void *d_a, *d_b, *d_c, *d_aux;
+			void *d_a, *d_b, *d_c;
+			CUdeviceptr auxbuf;
 			dc_create_tensor( (void**)&d_a, ishape );
 			dc_create_tensor( (void**)&d_b, kshape );
 			dc_create_tensor( (void**)&d_c, oshape );
-		    if(auxnb>0){
-		        uint64_t shape_linear=dc_create_tensor_shape_linear( auxnb );
-				dc_create_tensor( (void**)&d_aux, shape_linear ); 
-			}
+			cuMemAlloc( &auxbuf, auxnb );
 			
 			float* a=new float[bat*inc*in*in];
 			float* b=new float[qnc*pnc*fn*fn];
@@ -81,8 +79,9 @@ int main()
 
 			dc_tensor_store( d_a, ishape, a, bat*in*in*sizeof(float), bat*in*in*sizeof(float), inc, NULL );
 			dc_tensor_store( d_b, kshape, b, pnc*fn*fn*sizeof(float), pnc*fn*fn*sizeof(float), qnc, NULL );
-			if(dc_cellconv( Op, d_aux, d_c, d_a, d_b, NULL, 1.f, NULL )!=dc_success){
+			if(dc_cellconv( Op, (void*)auxbuf, d_c, d_a, d_b, NULL, 1.f, NULL )!=dc_success){
 				printf( "error: conv exec failed!\n" );
+				goto __LAB0;
 			}
 			dc_tensor_load( d, bat*on*on*sizeof(float), d_c, oshape, bat*on*on*sizeof(float), onc, NULL );
 			cuCtxSynchronize();
@@ -90,22 +89,21 @@ int main()
 			bool is_ok=check( c, d, bat*onc*on*on );
 			if(!is_ok){
 				printf( "examples[%d][%d] is compute failed!\n", dir, e );
+				goto __LAB0;
 			}
 
+		__LAB0:
 			dc_release_tensor( d_a );
 			dc_release_tensor( d_b );
 			dc_release_tensor( d_c );
-		    if(auxnb!=0){
-				dc_release_tensor( d_aux );
-			}
 			dc_destroy_cellconvOp(Op);
+			cuMemFree(auxbuf);
 			delete[] a;
 			delete[] b;
 			delete[] c;
 			delete[] d;
-			if(!is_ok) goto __EXIT__;
+			if(!is_ok) break;
 		}
 	}
-__EXIT__:
 	dc_exit();
 }

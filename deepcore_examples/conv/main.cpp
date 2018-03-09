@@ -14,7 +14,7 @@ int main()
 	}
 	dc_set_device(0);
 
-	tensor_shape_t shapes[]={{48,3,32,32,1},{48,3,32,64,1},{24,3,64,128,1},{8,3,32,64,1},{8,3,64,128,1},{8,3,32,256,1},{6,3,64,256,1}};
+	tensor_shape_t shapes[]={{48,3,128,32,1},{48,3,32,64,1},{24,3,64,128,1},{8,3,32,64,1},{8,3,64,128,1},{8,3,32,256,1},{6,3,64,256,1}};
 
 	for( int dir=0; dir<2; ++dir )
 	{
@@ -83,6 +83,7 @@ int main()
 			dc_tensor_store( d_b, kshape, b, pnc*fn*fn*sizeof(float), pnc*fn*fn*sizeof(float), qnc, NULL );
 			if(dc_conv( Op, d_aux, d_c, d_a, d_b, NULL, 1.f, NULL )!=dc_success){
 				printf( "error: conv exec failed!\n" );
+				goto __LAB0;
 			}
 			dc_tensor_load( d, bat*on*on*sizeof(float), d_c, oshape, bat*on*on*sizeof(float), onc, NULL );
 			cuCtxSynchronize();
@@ -90,7 +91,9 @@ int main()
 			bool is_ok=check( c, d, onc*bat*on*on );
 			if(!is_ok){
 				printf( "examples[%d][%d] is compute failed!\n", dir, e );
+				goto __LAB0;
 			}
+		__LAB0:
 			dc_release_tensor( d_a );
 			dc_release_tensor( d_b );
 			dc_release_tensor( d_c );
@@ -102,9 +105,8 @@ int main()
 			delete[] b;
 			delete[] c;
 			delete[] d;
-			if(!is_ok) goto __EXIT__;
+			if(!is_ok) break;
 		}
 	}
-__EXIT__:
 	dc_exit();
 }
